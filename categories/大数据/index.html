@@ -135,7 +135,7 @@
             
             <span>
                 <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                4.2k
+                4.3k
             </span>
             
             
@@ -243,13 +243,13 @@
                 
                     <span>
                         <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                        17k
+                        18k
                     </span>
                 
                 
                     <span>
                         <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                        15 mins.
+                        16 mins.
                     </span>
                 
                 
@@ -261,8 +261,9 @@
         <div class="md-content animated fadeIn">
             
                 <p>Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL转化为MapReduce任务的呢？</p>
-<p>Hive 底层执行流程<br>我们以下面这个SQL为例</p>
-<p>FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, sum(substr(src.value,4)) GROUP BY src.key;<br>整个编译过程分为六个阶...</p>
+<p>我们以下面这个SQL为例</p>
+<pre><code class="SQL">FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, sum(substr(src.value,4)) GROUP BY src.key;</code></pre>
+<p>整个编译过程分为六个阶段：<br><strong>1.Antlr定...</strong></p>
             
             <span class="read-more"><a href="/2019/11/24/Hive%E5%BA%95%E5%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" title="查看全文" class="posttitle">查看全文</a> <b class="iconfont icon-arrow-right- gradient-text"></b></span>
         </div>

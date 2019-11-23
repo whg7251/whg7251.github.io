@@ -85,13 +85,13 @@
                 
                 <span>
                     <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                    17k
+                    18k
                 </span>
                 
                 
                 <span>
                     <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                    15 mins.
+                    16 mins.
                 </span>
                 
                 
@@ -126,96 +126,352 @@
     <div class='main'>
         <div class="content markdown animated fadeIn">
             <p>Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL转化为MapReduce任务的呢？</p>
-<p>Hive 底层执行流程<br>我们以下面这个SQL为例</p>
-<p>FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, sum(substr(src.value,4)) GROUP BY src.key;<br>整个编译过程分为六个阶段：<br>1.Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL<br>转化为抽象语法树AST Tree<br>HiveLexerX，HiveParser分别是Antlr对SQL编译后自动生成的词法解析和语法解析类，在这两个类中进行复杂的解析。<br>例子中的AST tree为</p>
-<p>ABSTRACT SYNTAX TREE:<br>(TOK_QUERY (TOK_FROM (TOK_TABREF src))<br>(TOK_INSERT (TOK_DESTINATION (TOK_TAB dest_g1))<br>(TOK_SELECT (TOK_SELEXPR (TOK_COLREF src key))<br>(TOK_SELEXPR (TOK_FUNCTION sum (TOK_FUNCTION substr (TOK_COLREF src value) 4))))<br>(TOK_GROUPBY (TOK_COLREF src key))))<br>2.遍历AST Tree，抽象出查询的基本组成单元QueryBlock<br>AST Tree 仍然非常复杂，不够结构化，不方便直接翻译为 MapReduce 程序， AST<br>Tree 转化为 QueryBlock(QB)就是将 SQL 进一部抽象和结构化。<br>AST Tree 生成 QueryBlock 的过程是一个递归的过程，先序遍历 AST Tree ，遇到不<br>同的Token 节点(理解为特殊标记)，保存到相应的属性中，主要包含以下几个过程</p>
-<p>TOK_QUERY =&gt; 创建 QB 对象，循环递归子节点<br>TOK_FROM =&gt; 将表名语法部分保存到 QB 对象的 aliasToTabs 等属性中<br>TOK_INSERT =&gt; 循环递归子节点<br>TOK_DESTINATION =&gt; 将输出目标的语法部分保存在 QBParseInfo 对象的nameToDest 属性中<br>TOK_SELECT =&gt; 分别将查询表达式的语法部分保存在 destToSelExpr 、destToAggregationExprs 、 destToDistinctFuncExprs 三个属性中<br>TOK_WHERE =&gt; 将 Where 部分的语法保存在 QBParseInfo 对象的destToWhereExpr 属性中<br>3.遍历QueryBlock，翻译为执行操作树OperatorTree<br>Hive 最终生成的 MapReduce 任务， Map 阶段和 Reduce 阶段均由 Operator Tree<br>组成。逻辑操作符，就是在 Map 阶段或者 Reduce 阶段完成单一特定的操作。<br>基本的操作符包括<br>TableScanOperator、SelectOperator、FilterOperator、JoinOperator、GroupByOperator、ReduceSinkOperator<br>QueryBlock 生成 Operator Tree 就是遍历上一个过程中生成的 QB 和 QBParseInfo<br>对象的保存<br>语法的属性，包含如下几个步骤：</p>
-<p>QB#aliasToSubq =&gt; 有子查询，递归调用<br>QB#aliasToTabs =&gt; TableScanOperator<br>QBParseInfo#joinExpr =&gt; QBJoinTree =&gt; ReduceSinkOperator + JoinOperator<br>QBParseInfo#destToWhereExpr =&gt; FilterOperator<br>QBParseInfo#destToGroupby =&gt; ReduceSinkOperator +GroupByOperator<br>QBParseInfo#destToOrderby =&gt; ReduceSinkOperator + ExtractOperator<br>由于 Join/GroupBy/OrderBy 均需要在 Reduce 阶段完成，所以在生成相应操作的Operator 之前都会先生成一个 ReduceSinkOperator ，将字段组合并序列化为 Reduce Key/value,Partition Key<br>SQL例子翻译成OperatorTree</p>
-<p>STAGE PLANS:<br>  Stage: Stage-1<br>    Map Reduce<br>      Alias -&gt; Map Operator Tree:<br>        src<br>            Reduce Output Operator<br>              key expressions:<br>                    expr: key<br>                    type: string<br>              sort order: +<br>              Map-reduce partition columns:<br>                    expr: rand()<br>                    type: double<br>              tag: -1<br>              value expressions:<br>                    expr: substr(value, 4)<br>                    type: string<br>      Reduce Operator Tree:<br>        Group By Operator<br>          aggregations:<br>                expr: sum(UDFToDouble(VALUE.0))<br>          keys:<br>                expr: KEY.0<br>                type: string<br>          mode: partial1<br>          File Output Operator<br>            compressed: false<br>            table:<br>                input format: org.apache.hadoop.mapred.SequenceFileInputFormat<br>                output format: org.apache.hadoop.mapred.SequenceFileOutputFormat<br>                name: binary_table</p>
-<p>  Stage: Stage-2<br>    Map Reduce<br>      Alias -&gt; Map Operator Tree:<br>        /tmp/hive-zshao/67494501/106593589.10001<br>          Reduce Output Operator<br>            key expressions:<br>                  expr: 0<br>                  type: string<br>            sort order: +<br>            Map-reduce partition columns:<br>                  expr: 0<br>                  type: string<br>            tag: -1<br>            value expressions:<br>                  expr: 1<br>                  type: double<br>      Reduce Operator Tree:<br>        Group By Operator<br>          aggregations:<br>                expr: sum(VALUE.0)<br>          keys:<br>                expr: KEY.0<br>                type: string<br>          mode: final<br>          Select Operator<br>            expressions:<br>                  expr: 0<br>                  type: string<br>                  expr: 1<br>                  type: double<br>            Select Operator<br>              expressions:<br>                    expr: UDFToInteger(0)<br>                    type: int<br>                    expr: 1<br>                    type: double<br>              File Output Operator<br>                compressed: false<br>                table:<br>                    input format: org.apache.hadoop.mapred.TextInputFormat<br>                    output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat<br>                    serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe<br>                    name: dest_g1</p>
-<p>  Stage: Stage-0<br>    Move Operator<br>      tables:<br>            replace: true<br>            table:<br>                input format: org.apache.hadoop.mapred.TextInputFormat<br>                output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat<br>                serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe<br>                name: dest_g1<br>4.Logical Optimizer进行OperatorTree变换，合并不必要的<br>使用ReduceSinkOperator，减少shuffle数据量。大部分逻辑层优化器通过变换 OperatorTree ，合并操作符，达到减少 MapReduce Job ，减少 shuffle 数据量的目的。<br>5.遍历OperatorTree，翻译为Task tree<br>OperatorTree 转化为 Task tree的过程分为下面几个阶段</p>
-<p>对输出表生成 MoveTask<br>从 OperatorTree 的其中一个根节点向下深度优先遍历<br>ReduceSinkOperator 标示 Map/Reduce 的界限，多个 Job 间的界限<br>遍历其他根节点，遇过碰到 JoinOperator 合并 MapReduceTask<br>生成 StatTask 更新元数据<br>剪断 Map 与 Reduce 间的 Operator 的关系<br>6.PhysicalOptimizer 对Task tree优化，生成最终的执行计划</p>
-<p>7、执行</p>
+<h1 id="Hive-底层执行流程"><a href="#Hive-底层执行流程" class="headerlink" title="Hive 底层执行流程"></a>Hive 底层执行流程</h1><p>我们以下面这个SQL为例</p>
+<pre><code class="SQL">FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, sum(substr(src.value,4)) GROUP BY src.key;</code></pre>
+<p>整个编译过程分为六个阶段：<br><strong>1.Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL转化为抽象语法树AST Tree</strong><br><a href="https://github.com/apache/hive/blob/branch-1.1/ql/src/java/org/apache/hadoop/hive/ql/parse/HiveLexer.g" target="_blank" rel="noopener">HiveLexerX</a>，<a href="https://github.com/apache/hive/blob/branch-1.1/ql/src/java/org/apache/hadoop/hive/ql/parse/HiveParser.g" target="_blank" rel="noopener">HiveParser</a>分别是Antlr对SQL编译后自动生成的词法解析和语法解析类，在这两个类中进行复杂的解析。<br>例子中的AST tree为</p>
+<pre><code class="java">ABSTRACT SYNTAX TREE:
+(TOK_QUERY (TOK_FROM (TOK_TABREF src))
+(TOK_INSERT (TOK_DESTINATION (TOK_TAB dest_g1)) 
+(TOK_SELECT (TOK_SELEXPR (TOK_COLREF src key)) 
+(TOK_SELEXPR (TOK_FUNCTION sum (TOK_FUNCTION substr (TOK_COLREF src value) 4))))
+(TOK_GROUPBY (TOK_COLREF src key))))</code></pre>
+<p><strong>2.遍历AST Tree，抽象出查询的基本组成单元QueryBlock</strong><br>AST Tree 仍然非常复杂，不够结构化，不方便直接翻译为 MapReduce 程序， AST<br>Tree 转化为 <a href="https://github.com/apache/hive/blob/branch-1.1/ql/src/java/org/apache/hadoop/hive/ql/parse/QB.java" target="_blank" rel="noopener">QueryBlock</a>(QB)就是将 SQL 进一部抽象和结构化。<br>AST Tree 生成 QueryBlock 的过程是一个递归的过程，先序遍历 AST Tree ，遇到不<br>同的Token 节点(理解为特殊标记)，保存到相应的属性中，主要包含以下几个过程</p>
+<pre><code class="java">TOK_QUERY =&gt; 创建 QB 对象，循环递归子节点
+TOK_FROM =&gt; 将表名语法部分保存到 QB 对象的 aliasToTabs 等属性中
+TOK_INSERT =&gt; 循环递归子节点
+TOK_DESTINATION =&gt; 将输出目标的语法部分保存在 QBParseInfo 对象的nameToDest 属性中
+TOK_SELECT =&gt; 分别将查询表达式的语法部分保存在 destToSelExpr 、destToAggregationExprs 、 destToDistinctFuncExprs 三个属性中
+TOK_WHERE =&gt; 将 Where 部分的语法保存在 QBParseInfo 对象的destToWhereExpr 属性中 </code></pre>
+<p><strong>3.遍历QueryBlock，翻译为执行操作树OperatorTree</strong><br>Hive 最终生成的 MapReduce 任务， Map 阶段和 Reduce 阶段均由 Operator Tree<br>组成。逻辑操作符，就是在 Map 阶段或者 Reduce 阶段完成单一特定的操作。<br>基本的操作符包括<br>TableScanOperator、SelectOperator、FilterOperator、JoinOperator、GroupByOperator、ReduceSinkOperator<br>QueryBlock 生成 Operator Tree 就是遍历上一个过程中生成的 QB 和 QBParseInfo<br>对象的保存<br>语法的属性，包含如下几个步骤：</p>
+<pre><code>QB#aliasToSubq =&gt; 有子查询，递归调用
+QB#aliasToTabs =&gt; TableScanOperator
+QBParseInfo#joinExpr =&gt; QBJoinTree =&gt; ReduceSinkOperator + JoinOperator
+QBParseInfo#destToWhereExpr =&gt; FilterOperator
+QBParseInfo#destToGroupby =&gt; ReduceSinkOperator +GroupByOperator
+QBParseInfo#destToOrderby =&gt; ReduceSinkOperator + ExtractOperator</code></pre><p>由于 Join/GroupBy/OrderBy 均需要在 Reduce 阶段完成，所以在生成相应操作的Operator 之前都会先生成一个 ReduceSinkOperator ，将字段组合并序列化为 Reduce Key/value,Partition Key<br><strong>SQL例子翻译成OperatorTree</strong></p>
+<pre><code class="sql">STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Alias -&gt; Map Operator Tree:
+        src
+            Reduce Output Operator
+              key expressions:
+                    expr: key
+                    type: string
+              sort order: +
+              Map-reduce partition columns:
+                    expr: rand()
+                    type: double
+              tag: -1
+              value expressions:
+                    expr: substr(value, 4)
+                    type: string
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations:
+                expr: sum(UDFToDouble(VALUE.0))
+          keys:
+                expr: KEY.0
+                type: string
+          mode: partial1
+          File Output Operator
+            compressed: false
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.mapred.SequenceFileOutputFormat
+                name: binary_table
+
+  Stage: Stage-2
+    Map Reduce
+      Alias -&gt; Map Operator Tree:
+        /tmp/hive-zshao/67494501/106593589.10001
+          Reduce Output Operator
+            key expressions:
+                  expr: 0
+                  type: string
+            sort order: +
+            Map-reduce partition columns:
+                  expr: 0
+                  type: string
+            tag: -1
+            value expressions:
+                  expr: 1
+                  type: double
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations:
+                expr: sum(VALUE.0)
+          keys:
+                expr: KEY.0
+                type: string
+          mode: final
+          Select Operator
+            expressions:
+                  expr: 0
+                  type: string
+                  expr: 1
+                  type: double
+            Select Operator
+              expressions:
+                    expr: UDFToInteger(0)
+                    type: int
+                    expr: 1
+                    type: double
+              File Output Operator
+                compressed: false
+                table:
+                    input format: org.apache.hadoop.mapred.TextInputFormat
+                    output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+                    serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe
+                    name: dest_g1
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+            replace: true
+            table:
+                input format: org.apache.hadoop.mapred.TextInputFormat
+                output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat
+                serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe
+                name: dest_g1</code></pre>
+<p><strong>4.Logical Optimizer进行OperatorTree变换，合并不必要的</strong><br>使用<a href="https://github.com/apache/hive/blob/branch-1.1/ql/src/java/org/apache/hadoop/hive/ql/exec/ReduceSinkOperator.java" target="_blank" rel="noopener">ReduceSinkOperator</a>，减少shuffle数据量。大部分逻辑层优化器通过变换 OperatorTree ，合并操作符，达到减少 MapReduce Job ，减少 shuffle 数据量的目的。<br><strong>5.遍历OperatorTree，翻译为Task tree</strong><br>OperatorTree 转化为 Task tree的过程分为下面几个阶段</p>
+<ul>
+<li>对输出表生成 MoveTask</li>
+<li>从 OperatorTree 的其中一个根节点向下深度优先遍历</li>
+<li>ReduceSinkOperator 标示 Map/Reduce 的界限，多个 Job 间的界限</li>
+<li>遍历其他根节点，遇过碰到 JoinOperator 合并 MapReduceTask</li>
+<li>生成 StatTask 更新元数据</li>
+<li>剪断 Map 与 Reduce 间的 Operator 的关系</li>
+</ul>
+<p><strong>6.PhysicalOptimizer 对Task tree优化，生成最终的执行计划</strong></p>
+<p><strong>7、执行</strong></p>
 <p>以上就是HiveSQL的底层执行流程</p>
-<p>打印SQL运行相关信息<br>我们在开发中，可以使用下面这个语句来打印SQL语句的相关运行信息</p>
-<p>EXPLAIN [EXTENDED|DEPENDENCY|AUTHORIZATION] query<br>注:我的版本是hive-1.1.0-cdh5.7.0，所以只可用三个可选属性，如果您版本比较高的话，可以去官网查阅对应属性<br>下面我对三种可选属性进行简单介绍</p>
-<p>EXTENDED<br>EXTENDED：打印SQL解析成AST&amp;Operator Tree最全面的信息</p>
-<p>hive (g6_hadoop)&gt; explain EXTENDED insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>OK<br>Explain<br>ABSTRACT SYNTAX TREE:</p>
-<p>TOK_QUERY<br>   TOK_FROM<br>      TOK_TABREF<br>         TOK_TABNAME<br>            g6_access_orc<br>   TOK_INSERT<br>      TOK_DESTINATION<br>         TOK_TAB<br>            TOK_TABNAME<br>               g6_access_orc_explain<br>      TOK_SELECT<br>         TOK_SELEXPR<br>            TOK_TABLE_OR_COL<br>               domain<br>         TOK_SELEXPR<br>            TOK_FUNCTION<br>               count<br>               1<br>            num<br>      TOK_WHERE<br>         &gt;<br>            TOK_TABLE_OR_COL<br>               traffic<br>            ‘99900’<br>      TOK_GROUPBY<br>         TOK_TABLE_OR_COL<br>            domain</p>
-<p>STAGE DEPENDENCIES:<br>  Stage-1 is a root stage<br>  Stage-0 depends on stages: Stage-1<br>  Stage-2 depends on stages: Stage-0</p>
-<p>STAGE PLANS:<br>  Stage: Stage-1<br>    Map Reduce<br>      Map Operator Tree:<br>          TableScan<br>            alias: g6_access_orc<br>            Statistics: Num rows: 260326 Data size: 188215698 Basic stats: COMPLETE Column stats: NONE<br>            GatherStats: false<br>            Filter Operator<br>              isSamplingPred: false<br>              predicate: (traffic &gt; 99900) (type: boolean)<br>              Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>              Select Operator<br>                expressions: domain (type: string)<br>                outputColumnNames: domain<br>                Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                Group By Operator<br>                  aggregations: count(1)<br>                  keys: domain (type: string)<br>                  mode: hash<br>                  outputColumnNames: _col0, _col1<br>                  Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                  Reduce Output Operator<br>                    key expressions: _col0 (type: string)<br>                    sort order: +<br>                    Map-reduce partition columns: _col0 (type: string)<br>                    Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                    tag: -1<br>                    value expressions: _col1 (type: bigint)<br>                    auto parallelism: false<br>      Path -&gt; Alias:<br>        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc [g6_access_orc]<br>      Path -&gt; Partition:<br>        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc<br>          Partition<br>            base file name: g6_access_orc<br>            input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat<br>            output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat<br>            properties:<br>              COLUMN_STATS_ACCURATE true<br>              bucket_count -1<br>              columns cdn,region,level,time,ip,domain,url,traffic<br>              columns.comments<br>              columns.types string:string:string:string:string:string:string:bigint<br>              field.delim<br>              file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat<br>              file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat<br>              location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc<br>              name g6_hadoop.g6_access_orc<br>              numFiles 1<br>              numRows 260326<br>              rawDataSize 188215698<br>              serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}<br>              serialization.format<br>              serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde<br>              totalSize 8567798<br>              transient_lastDdlTime 1557676635<br>            serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde</p>
-<pre><code>          input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-          output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-          properties:
-            COLUMN_STATS_ACCURATE true
-            bucket_count -1
-            columns cdn,region,level,time,ip,domain,url,traffic
-            columns.comments 
-            columns.types string:string:string:string:string:string:string:bigint
-            field.delim     
-            file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-            file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
-            location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc
-            name g6_hadoop.g6_access_orc
-            numFiles 1
-            numRows 260326
-            rawDataSize 188215698
-            serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}
-            serialization.format    
-            serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde
-            totalSize 8567798
-            transient_lastDdlTime 1557676635
-          serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde
-          name: g6_hadoop.g6_access_orc
-        name: g6_hadoop.g6_access_orc
-  Truncated Path -&gt; Alias:
-    /g6_hadoop.db/g6_access_orc [g6_access_orc]
-  Needs Tagging: false
-  Reduce Operator Tree:
-    Group By Operator
-      aggregations: count(VALUE._col0)
-      keys: KEY._col0 (type: string)
-      mode: mergepartial
-      outputColumnNames: _col0, _col1
-      Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
-      File Output Operator
-        compressed: false
-        GlobalTableId: 1
-        directory: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000
-        NumFilesPerFileSink: 1
-        Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
-        Stats Publishing Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/
-        table:
-            input format: org.apache.hadoop.mapred.TextInputFormat
-            output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+<h1 id="打印SQL运行相关信息"><a href="#打印SQL运行相关信息" class="headerlink" title="打印SQL运行相关信息"></a>打印SQL运行相关信息</h1><p>我们在开发中，可以使用下面这个语句来打印SQL语句的相关运行信息</p>
+<pre><code class="sql">EXPLAIN [EXTENDED|DEPENDENCY|AUTHORIZATION] query</code></pre>
+<p>注:我的版本是<strong>hive-1.1.0-cdh5.7.0</strong>，所以只可用三个可选属性，如果您版本比较高的话，可以去<a href="https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Explain" target="_blank" rel="noopener">官网</a>查阅对应属性<br>下面我对三种可选属性进行简单介绍</p>
+<h2 id="EXTENDED"><a href="#EXTENDED" class="headerlink" title="EXTENDED"></a>EXTENDED</h2><p>EXTENDED：打印SQL解析成AST&amp;Operator Tree最全面的信息</p>
+<pre><code class="sql">hive (g6_hadoop)&gt; explain EXTENDED insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;&#39;99900&#39; group by domain;
+OK
+Explain
+ABSTRACT SYNTAX TREE:
+
+TOK_QUERY
+   TOK_FROM
+      TOK_TABREF
+         TOK_TABNAME
+            g6_access_orc
+   TOK_INSERT
+      TOK_DESTINATION
+         TOK_TAB
+            TOK_TABNAME
+               g6_access_orc_explain
+      TOK_SELECT
+         TOK_SELEXPR
+            TOK_TABLE_OR_COL
+               domain
+         TOK_SELEXPR
+            TOK_FUNCTION
+               count
+               1
+            num
+      TOK_WHERE
+         &gt;
+            TOK_TABLE_OR_COL
+               traffic
+            &#39;99900&#39;
+      TOK_GROUPBY
+         TOK_TABLE_OR_COL
+            domain
+
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-0 depends on stages: Stage-1
+  Stage-2 depends on stages: Stage-0
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: g6_access_orc
+            Statistics: Num rows: 260326 Data size: 188215698 Basic stats: COMPLETE Column stats: NONE
+            GatherStats: false
+            Filter Operator
+              isSamplingPred: false
+              predicate: (traffic &gt; 99900) (type: boolean)
+              Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE
+              Select Operator
+                expressions: domain (type: string)
+                outputColumnNames: domain
+                Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE
+                Group By Operator
+                  aggregations: count(1)
+                  keys: domain (type: string)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE
+                  Reduce Output Operator
+                    key expressions: _col0 (type: string)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: string)
+                    Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE
+                    tag: -1
+                    value expressions: _col1 (type: bigint)
+                    auto parallelism: false
+      Path -&gt; Alias:
+        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc [g6_access_orc]
+      Path -&gt; Partition:
+        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc 
+          Partition
+            base file name: g6_access_orc
+            input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
             properties:
               COLUMN_STATS_ACCURATE true
               bucket_count -1
-              columns domain,num
+              columns cdn,region,level,time,ip,domain,url,traffic
               columns.comments 
-              columns.types string:bigint
-              field.delim |
-              file.inputformat org.apache.hadoop.mapred.TextInputFormat
-              file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-              location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain
-              name g6_hadoop.g6_access_orc_explain
+              columns.types string:string:string:string:string:string:string:bigint
+              field.delim   
+              file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+              file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+              location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc
+              name g6_hadoop.g6_access_orc
               numFiles 1
-              numRows 7
-              rawDataSize 149
-              serialization.ddl struct g6_access_orc_explain { string domain, i64 num}
-              serialization.format |
-              serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
-              totalSize 156
-              transient_lastDdlTime 1558661108
-            serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
-            name: g6_hadoop.g6_access_orc_explain
-        TotalFiles: 1
-        GatherStats: true
-        MultiFileSpray: false</code></pre><p>  Stage: Stage-0<br>    Move Operator<br>      tables:<br>          replace: true<br>          source: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000<br>          table:<br>              input format: org.apache.hadoop.mapred.TextInputFormat<br>              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat<br>              properties:<br>                COLUMN_STATS_ACCURATE true<br>                bucket_count -1<br>                columns domain,num<br>                columns.comments<br>                columns.types string:bigint<br>                field.delim |<br>                file.inputformat org.apache.hadoop.mapred.TextInputFormat<br>                file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat<br>                location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain<br>                name g6_hadoop.g6_access_orc_explain<br>                numFiles 1<br>                numRows 7<br>                rawDataSize 149<br>                serialization.ddl struct g6_access_orc_explain { string domain, i64 num}<br>                serialization.format |<br>                serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe<br>                totalSize 156<br>                transient_lastDdlTime 1558661108<br>              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe<br>              name: g6_hadoop.g6_access_orc_explain</p>
-<p>  Stage: Stage-2<br>    Stats-Aggr Operator<br>      Stats Aggregation Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/</p>
-<p>Time taken: 1.359 seconds, Fetched: 198 row(s)<br>AUTHORIZATION<br>AUTHORIZATION :打印SQL运行相关权限</p>
-<p>hive (g6_hadoop)&gt; explain AUTHORIZATION insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>OK<br>Explain<br>INPUTS:<br>  g6_hadoop@g6_access_orc<br>OUTPUTS:<br>  g6_hadoop@g6_access_orc_explain<br>CURRENT_USER:<br>  hadoop<br>OPERATION:<br>  QUERY<br>AUTHORIZATION_FAILURES:<br>  No privilege ‘Update’ found for outputs { database:g6_hadoop, table:g6_access_orc_explain}<br>  No privilege ‘Select’ found for inputs { database:g6_hadoop, table:g6_access_orc, columnName:domain}<br>Time taken: 0.599 seconds, Fetched: 11 row(s)<br>DEPENDENCY<br>DEPENDENCY:打印SQL输入表的相关信息</p>
-<p>hive (g6_hadoop)&gt; explain DEPENDENCY insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>Explain<br>{“input_partitions”:[],”input_tables”:[{“tablename”:”g6_hadoop@g6_access_orc”,”tabletype”:”MANAGED_TABLE”}]}<br>Time taken: 0.135 seconds, Fetched: 1 row(s)</p>
+              numRows 260326
+              rawDataSize 188215698
+              serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}
+              serialization.format  
+              serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde
+              totalSize 8567798
+              transient_lastDdlTime 1557676635
+            serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+
+              input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+              output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+              properties:
+                COLUMN_STATS_ACCURATE true
+                bucket_count -1
+                columns cdn,region,level,time,ip,domain,url,traffic
+                columns.comments 
+                columns.types string:string:string:string:string:string:string:bigint
+                field.delim     
+                file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+                file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+                location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc
+                name g6_hadoop.g6_access_orc
+                numFiles 1
+                numRows 260326
+                rawDataSize 188215698
+                serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}
+                serialization.format    
+                serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde
+                totalSize 8567798
+                transient_lastDdlTime 1557676635
+              serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+              name: g6_hadoop.g6_access_orc
+            name: g6_hadoop.g6_access_orc
+      Truncated Path -&gt; Alias:
+        /g6_hadoop.db/g6_access_orc [g6_access_orc]
+      Needs Tagging: false
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          keys: KEY._col0 (type: string)
+          mode: mergepartial
+          outputColumnNames: _col0, _col1
+          Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
+          File Output Operator
+            compressed: false
+            GlobalTableId: 1
+            directory: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000
+            NumFilesPerFileSink: 1
+            Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
+            Stats Publishing Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/
+            table:
+                input format: org.apache.hadoop.mapred.TextInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                properties:
+                  COLUMN_STATS_ACCURATE true
+                  bucket_count -1
+                  columns domain,num
+                  columns.comments 
+                  columns.types string:bigint
+                  field.delim |
+                  file.inputformat org.apache.hadoop.mapred.TextInputFormat
+                  file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                  location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain
+                  name g6_hadoop.g6_access_orc_explain
+                  numFiles 1
+                  numRows 7
+                  rawDataSize 149
+                  serialization.ddl struct g6_access_orc_explain { string domain, i64 num}
+                  serialization.format |
+                  serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                  totalSize 156
+                  transient_lastDdlTime 1558661108
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                name: g6_hadoop.g6_access_orc_explain
+            TotalFiles: 1
+            GatherStats: true
+            MultiFileSpray: false
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: true
+          source: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              properties:
+                COLUMN_STATS_ACCURATE true
+                bucket_count -1
+                columns domain,num
+                columns.comments 
+                columns.types string:bigint
+                field.delim |
+                file.inputformat org.apache.hadoop.mapred.TextInputFormat
+                file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain
+                name g6_hadoop.g6_access_orc_explain
+                numFiles 1
+                numRows 7
+                rawDataSize 149
+                serialization.ddl struct g6_access_orc_explain { string domain, i64 num}
+                serialization.format |
+                serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                totalSize 156
+                transient_lastDdlTime 1558661108
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: g6_hadoop.g6_access_orc_explain
+
+  Stage: Stage-2
+    Stats-Aggr Operator
+      Stats Aggregation Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/
+
+Time taken: 1.359 seconds, Fetched: 198 row(s)</code></pre>
+<h2 id="AUTHORIZATION"><a href="#AUTHORIZATION" class="headerlink" title="AUTHORIZATION"></a>AUTHORIZATION</h2><p>AUTHORIZATION :打印SQL运行相关权限</p>
+<pre><code class="sql">hive (g6_hadoop)&gt; explain AUTHORIZATION insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;&#39;99900&#39; group by domain;
+OK
+Explain
+INPUTS: 
+  g6_hadoop@g6_access_orc
+OUTPUTS: 
+  g6_hadoop@g6_access_orc_explain
+CURRENT_USER: 
+  hadoop
+OPERATION: 
+  QUERY
+AUTHORIZATION_FAILURES: 
+  No privilege &#39;Update&#39; found for outputs { database:g6_hadoop, table:g6_access_orc_explain}
+  No privilege &#39;Select&#39; found for inputs { database:g6_hadoop, table:g6_access_orc, columnName:domain}
+Time taken: 0.599 seconds, Fetched: 11 row(s)</code></pre>
+<h2 id="DEPENDENCY"><a href="#DEPENDENCY" class="headerlink" title="DEPENDENCY"></a>DEPENDENCY</h2><p>DEPENDENCY:打印SQL输入表的相关信息</p>
+<pre><code class="sql">hive (g6_hadoop)&gt; explain DEPENDENCY insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;&#39;99900&#39; group by domain;
+Explain
+{&quot;input_partitions&quot;:[],&quot;input_tables&quot;:[{&quot;tablename&quot;:&quot;g6_hadoop@g6_access_orc&quot;,&quot;tabletype&quot;:&quot;MANAGED_TABLE&quot;}]}
+Time taken: 0.135 seconds, Fetched: 1 row(s)</code></pre>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls"
@@ -263,13 +519,20 @@
                     </dl>
                 </div>
                 <ul>
-                    <li><a href="/">6 <p>文章</p></a></li>
+                    <li><a href="/">5 <p>文章</p></a></li>
                     <li><a href="/categories">1 <p>分类</p></a></li>
                     <li><a href="/tags">11 <p>标签</p></a></li>
                 </ul>
             </div>
             
             
+            
+            <div class="box sticky animated fadeInRight faster">
+                <div id="toc" class="subbox">
+                    <h4>目录</h4>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Hive-底层执行流程"><span class="toc-number">1.</span> <span class="toc-text">Hive 底层执行流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#打印SQL运行相关信息"><span class="toc-number">2.</span> <span class="toc-text">打印SQL运行相关信息</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#EXTENDED"><span class="toc-number">2.1.</span> <span class="toc-text">EXTENDED</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#AUTHORIZATION"><span class="toc-number">2.2.</span> <span class="toc-text">AUTHORIZATION</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DEPENDENCY"><span class="toc-number">2.3.</span> <span class="toc-text">DEPENDENCY</span></a></li></ol></li></ol>
+                </div>
+            </div>
             
             
         </div>
