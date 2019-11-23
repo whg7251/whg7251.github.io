@@ -81,11 +81,12 @@ FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, ...
                                     </div>
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
-                                        <a class="timeline-title" target="_self" href="/2019/11/23/Maxwell%E8%AF%BB%E5%8F%96MySQL%20binlog%E6%97%A5%E5%BF%97%E5%88%B0Kafka/">Maxwell读取MySQL binlog日志到Kafka</a>
+                                        <a class="timeline-title" target="_self" href="/2019/11/23/Maxwell%E8%AF%BB%E5%8F%96MySQL%E3%81%AEbinlog%E6%97%A5%E5%BF%97%E5%88%B0Kafka/">Maxwell读取MySQL binlog日志到Kafka</a>
                                         <p>
-                                            Maxwell读取MySQL binlog日志到Kafka启动MySQL创建maxwell的数据库和用户在MySQL中创建一个测试数据库和表前面三个步骤详见 Maxwell读取MySQL binlog日志通过stdout展示
+                                            启动MySQL创建maxwell的数据库和用户在MySQL中创建一个测试数据库和表前面三个步骤详见 Maxwell读取MySQL binlog日志通过stdout展示
 启动Zookeeper[hadoop@hadoop001 ~]$ cd $ZK_HOME/bin
-[hadoop@hadoop001 bin]$ ./zkServer....
+[hadoop@hadoop001 bin]$ ./zkServer.sh start
+启动kafka，并创建主题为maxwel...
                                         </p>
                                     </div>
                                 </li>
