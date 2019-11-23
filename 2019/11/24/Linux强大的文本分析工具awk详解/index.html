@@ -5,12 +5,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hello World - 阳春的blog</title>
+    <title>Linux强大的文本分析工具awk详解 - 阳春的blog</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="google" content="notranslate" />
     <meta name="keywords" content="TriDiamond Obsidian,"> 
-    <meta name="description" content="专注于大数据相关,Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any pr,"> 
+    <meta name="description" content="专注于大数据相关,1、awk简介awk是一个强大的文本分析工具，也可以说是Linux下一门字符串处理语言，它的数据可以来自标准输入(stdin)、一个文件或多个文件、或其他命令的输出。它可以作为命令使用，但更多的是作,"> 
     <meta name="author" content="阳春"> 
     <link rel="alternative" href="atom.xml" title="阳春的blog" type="application/atom+xml"> 
     <link rel="icon" href="/img/favicon.png"> 
@@ -43,7 +43,7 @@
     <div class="navigation animated fadeIn fast delay-1s">
         <img id="home-icon" class="icon-home" src="/img/favicon.png" alt="" data-url="http://yoursite.com">
         <div id="play-icon" title="Play/Pause" class="iconfont icon-play"></div>
-        <h3 class="subtitle">Hello World</h3>
+        <h3 class="subtitle">Linux强大的文本分析工具awk详解</h3>
         <div class="social">
             <!--        <div class="like-icon">-->
             <!--            <a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
@@ -73,24 +73,25 @@
         <div class="else">
             <p class="animated fadeInDown">
                 
-                <a href="javascript:;" target="_blank" rel="noopener"><b>「 </b>文章<b> 」</b></a>
+                <a href="/categories/大数据"><b>「
+                    </b>大数据<b> 」</b></a>
                 
-                十一月 23, 2019
+                十一月 24, 2019
             </p>
-            <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/hello-world/" title="Hello World" class="">Hello World</a>
+            <h3 class="post-title animated fadeInDown"><a href="/2019/11/24/Linux%E5%BC%BA%E5%A4%A7%E7%9A%84%E6%96%87%E6%9C%AC%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7awk%E8%AF%A6%E8%A7%A3/" title="Linux强大的文本分析工具awk详解" class="">Linux强大的文本分析工具awk详解</a>
             </h3>
             
             <p class="post-count animated fadeInDown">
                 
                 <span>
                     <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                    1.8k
+                    4.2k
                 </span>
                 
                 
                 <span>
                     <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                    2 mins.
+                    4 mins.
                 </span>
                 
                 
@@ -102,6 +103,8 @@
                 
             </p>
             
+            
+            <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/AWK/" rel="tag">AWK</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Linux/" rel="tag">Linux</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Shell/" rel="tag">Shell</a></li></ul>
             
         </div>
     </div>
@@ -122,15 +125,77 @@
 <div class="article">
     <div class='main'>
         <div class="content markdown animated fadeIn">
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre><code class="bash">$ hexo new &quot;My New Post&quot;</code></pre>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><pre><code class="bash">$ hexo server</code></pre>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><pre><code class="bash">$ hexo generate</code></pre>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><pre><code class="bash">$ hexo deploy</code></pre>
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+            <h1 id="1、awk简介"><a href="#1、awk简介" class="headerlink" title="1、awk简介"></a>1、awk简介</h1><p>awk是一个强大的文本分析工具，也可以说是Linux下一门字符串处理语言，它的数据可以来自标准输入(stdin)、一个文件或多个文件、或其他命令的输出。它可以作为命令使用，但更多的是作为脚本使用。</p>
+<p>它支持正则表达式、支持自定义变量（类map型数组，只不过索引可以是字符串）、支持内置变量、内置函数、及流程控制语句。</p>
+<p>它会依次读取文件的每一行内容, 然后对其进行处理。空格符和制表符为其默认的分割符，使用分割符号对每行进行切片，然后对切开部分进行单独的处理。</p>
+<h1 id="2、awk参数"><a href="#2、awk参数" class="headerlink" title="2、awk参数"></a>2、awk参数</h1><p>支持自定义分隔符</p>
+<p>支持正则表达式匹配 （标准正则）</p>
+<p>支持自定义变量，数组 a[1] a[tom] map(key)</p>
+<p>支持内置变量</p>
+<pre><code>                   ARGC               命令行参数个数
+
+                   ARGV               命令行参数排列
+
+                   ENVIRON            支持队列中系统环境变量的使用
+
+                   FILENAME           awk浏览的文件名
+
+                   FNR                浏览文件的记录数
+
+                   FS                 设置输入域分隔符，等价于命令行 -F选项
+
+                   NF                 浏览记录的域的个数  本行总列数
+
+                   NR                 已读的记录数    行号
+
+                   OFS                输出域分隔符
+
+                   ORS                输出记录分隔符
+
+                   RS                 控制记录分隔符</code></pre><p>控制记录分隔符 支持函数 print、split、substr、sub、gsub</p>
+<p>支持流程控制语句，类C语言 if、while、do/while、for、break、continue</p>
+<p>$0 代表整个记录，$1表示第一个字段，$2表示第二个字段,一次类推。。。。</p>
+<h1 id="3、示例"><a href="#3、示例" class="headerlink" title="3、示例"></a><strong>3、示例</strong></h1><h2 id="文本数据"><a href="#文本数据" class="headerlink" title="文本数据"></a><strong>文本数据</strong></h2><pre><code>root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+sync:x:5:0:sync:/sbin:/bin/sync
+shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+halt:x:7:0:halt:/sbin:/sbin/halt
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+uucp:x:10:14:uucp:/var/spool/uucp:/sbin/nologin
+operator:x:11:0:operator:/root:/sbin/nologin
+games:x:12:100:games:/usr/games:/sbin/nologin
+gopher:x:13:30:gopher:/var/gopher:/sbin/nologin
+ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+nobody:x:99:99:Nobody:/:/sbin/nologin
+vcsa:x:69:69:virtual console memory owner:/dev:/sbin/nologin
+saslauth:x:499:76:&quot;Saslauthd user&quot;:/var/empty/saslauth:/sbin/nologin
+postfix:x:89:89::/var/spool/postfix:/sbin/nologin
+sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+mysqladmin:x:514:101::/usr/local/mysql:/bin/bash</code></pre><h3 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h3><p>按：切割a.txt文件，打印第一列</p>
+<pre><code class="shell">awk -F&#39;:&#39; &#39;{print $1}&#39; a.txt</code></pre>
+<p>按：切割a.txt文件，打印第一列和第七列,tab键分隔</p>
+<pre><code class="shell">awk -F&#39;:&#39; &#39;{print $1 &quot;\t&quot; $7}&#39; a.txt</code></pre>
+<p>按：切割a.txt文件，打印第一列和第七列,表头追加name和shell，表尾追加over，字段间tab键分隔</p>
+<pre><code class="shell">awk -F&#39;:&#39; &#39;BEGIN{print &quot;name\tshell&quot;} {print $1 &quot;\t&quot; $7} END{print &quot;over&quot;}&#39; a.txt</code></pre>
+<p>打印含root单词的行</p>
+<pre><code class="shell">awk &#39;/root/ {print $0} &#39; a.txt</code></pre>
+<p>打印含root单词的行后，再打印所有行（搜索值作用于第一个函数）</p>
+<pre><code class="shell">awk &#39;/root/ {print $0}  {print $0} &#39; a.txt</code></pre>
+<p>打印文件每行的信息，最前方追加行号和该行总列数，用tab键分隔</p>
+<pre><code class="shell">awk -F&#39;:&#39; &#39;{print NR &quot;\t&quot; NF &quot;\t&quot; $0}&#39; a.txt</code></pre>
+<h2 id="报表统计数据"><a href="#报表统计数据" class="headerlink" title="报表统计数据"></a>报表统计数据</h2><pre><code class="shell"># 统计报表：合计每人1月工资，0：manager，1：worker
+Tom      0   2012-12-11      car     3000
+John     1   2013-01-13      bike    1000
+vivi     1   2013-01-18      car     2800
+Tom      0   2013-01-20      car     2500
+John     1   2013-01-28      bike    3500</code></pre>
+<h3 id="需求-1"><a href="#需求-1" class="headerlink" title="需求"></a>需求</h3><p>统计01月员工工资</p>
+<pre><code class="shell">awk &#39;{split($3,date,&quot;-&quot;);if(date[2]==&quot;01&quot;){name[$1]+=$5}} END{for(i in name){print i &quot;\t&quot; name[i]}}&#39; a.txt</code></pre>
+<p>统计01月员工工资，员工类型为0，末尾追加M，为1末尾追加W</p>
+<pre><code class="shell">awk &#39;{split($3,date,&quot;-&quot;);if(date[2]==&quot;01&quot;){name[$1]+=$5};if($2==&quot;0&quot;){role[$1]=&quot;M&quot;}else{role[$1]=&quot;W&quot;}} END{for(i in name){print i &quot;\t&quot; name[i] &quot;\t&quot; role[i]}}&#39; a.txt</code></pre>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls"
@@ -189,7 +254,7 @@
             <div class="box sticky animated fadeInRight faster">
                 <div id="toc" class="subbox">
                     <h4>目录</h4>
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Quick-Start"><span class="toc-number">1.</span> <span class="toc-text">Quick Start</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Create-a-new-post"><span class="toc-number">1.1.</span> <span class="toc-text">Create a new post</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Run-server"><span class="toc-number">1.2.</span> <span class="toc-text">Run server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Generate-static-files"><span class="toc-number">1.3.</span> <span class="toc-text">Generate static files</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-to-remote-sites"><span class="toc-number">1.4.</span> <span class="toc-text">Deploy to remote sites</span></a></li></ol></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1、awk简介"><span class="toc-number">1.</span> <span class="toc-text">1、awk简介</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2、awk参数"><span class="toc-number">2.</span> <span class="toc-text">2、awk参数</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3、示例"><span class="toc-number">3.</span> <span class="toc-text">3、示例</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#文本数据"><span class="toc-number">3.1.</span> <span class="toc-text">文本数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#需求"><span class="toc-number">3.1.1.</span> <span class="toc-text">需求</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#报表统计数据"><span class="toc-number">3.2.</span> <span class="toc-text">报表统计数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#需求-1"><span class="toc-number">3.2.1.</span> <span class="toc-text">需求</span></a></li></ol></li></ol></li></ol>
                 </div>
             </div>
             

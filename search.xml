@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title>Linux强大的文本分析工具awk详解</title>
+      <link href="/2019/11/24/Linux%E5%BC%BA%E5%A4%A7%E7%9A%84%E6%96%87%E6%9C%AC%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7awk%E8%AF%A6%E8%A7%A3/"/>
+      <url>/2019/11/24/Linux%E5%BC%BA%E5%A4%A7%E7%9A%84%E6%96%87%E6%9C%AC%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7awk%E8%AF%A6%E8%A7%A3/</url>
+      
+        <content type="html"><![CDATA[<h1 id="1、awk简介"><a href="#1、awk简介" class="headerlink" title="1、awk简介"></a>1、awk简介</h1><p>awk是一个强大的文本分析工具，也可以说是Linux下一门字符串处理语言，它的数据可以来自标准输入(stdin)、一个文件或多个文件、或其他命令的输出。它可以作为命令使用，但更多的是作为脚本使用。</p><p>它支持正则表达式、支持自定义变量（类map型数组，只不过索引可以是字符串）、支持内置变量、内置函数、及流程控制语句。</p><p>它会依次读取文件的每一行内容, 然后对其进行处理。空格符和制表符为其默认的分割符，使用分割符号对每行进行切片，然后对切开部分进行单独的处理。</p><h1 id="2、awk参数"><a href="#2、awk参数" class="headerlink" title="2、awk参数"></a>2、awk参数</h1><p>支持自定义分隔符</p><p>支持正则表达式匹配 （标准正则）</p><p>支持自定义变量，数组 a[1] a[tom] map(key)</p><p>支持内置变量</p><pre><code>                   ARGC               命令行参数个数                   ARGV               命令行参数排列                   ENVIRON            支持队列中系统环境变量的使用                   FILENAME           awk浏览的文件名                   FNR                浏览文件的记录数                   FS                 设置输入域分隔符，等价于命令行 -F选项                   NF                 浏览记录的域的个数  本行总列数                   NR                 已读的记录数    行号                   OFS                输出域分隔符                   ORS                输出记录分隔符                   RS                 控制记录分隔符</code></pre><p>控制记录分隔符 支持函数 print、split、substr、sub、gsub</p><p>支持流程控制语句，类C语言 if、while、do/while、for、break、continue</p><p>$0 代表整个记录，$1表示第一个字段，$2表示第二个字段,一次类推。。。。</p><h1 id="3、示例"><a href="#3、示例" class="headerlink" title="3、示例"></a><strong>3、示例</strong></h1><h2 id="文本数据"><a href="#文本数据" class="headerlink" title="文本数据"></a><strong>文本数据</strong></h2><pre><code>root:x:0:0:root:/root:/bin/bashbin:x:1:1:bin:/bin:/sbin/nologindaemon:x:2:2:daemon:/sbin:/sbin/nologinadm:x:3:4:adm:/var/adm:/sbin/nologinlp:x:4:7:lp:/var/spool/lpd:/sbin/nologinsync:x:5:0:sync:/sbin:/bin/syncshutdown:x:6:0:shutdown:/sbin:/sbin/shutdownhalt:x:7:0:halt:/sbin:/sbin/haltmail:x:8:12:mail:/var/spool/mail:/sbin/nologinuucp:x:10:14:uucp:/var/spool/uucp:/sbin/nologinoperator:x:11:0:operator:/root:/sbin/nologingames:x:12:100:games:/usr/games:/sbin/nologingopher:x:13:30:gopher:/var/gopher:/sbin/nologinftp:x:14:50:FTP User:/var/ftp:/sbin/nologinnobody:x:99:99:Nobody:/:/sbin/nologinvcsa:x:69:69:virtual console memory owner:/dev:/sbin/nologinsaslauth:x:499:76:&quot;Saslauthd user&quot;:/var/empty/saslauth:/sbin/nologinpostfix:x:89:89::/var/spool/postfix:/sbin/nologinsshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologinmysqladmin:x:514:101::/usr/local/mysql:/bin/bash</code></pre><h3 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h3><p>按：切割a.txt文件，打印第一列</p><pre><code class="shell">awk -F&#39;:&#39; &#39;{print $1}&#39; a.txt</code></pre><p>按：切割a.txt文件，打印第一列和第七列,tab键分隔</p><pre><code class="shell">awk -F&#39;:&#39; &#39;{print $1 &quot;\t&quot; $7}&#39; a.txt</code></pre><p>按：切割a.txt文件，打印第一列和第七列,表头追加name和shell，表尾追加over，字段间tab键分隔</p><pre><code class="shell">awk -F&#39;:&#39; &#39;BEGIN{print &quot;name\tshell&quot;} {print $1 &quot;\t&quot; $7} END{print &quot;over&quot;}&#39; a.txt</code></pre><p>打印含root单词的行</p><pre><code class="shell">awk &#39;/root/ {print $0} &#39; a.txt</code></pre><p>打印含root单词的行后，再打印所有行（搜索值作用于第一个函数）</p><pre><code class="shell">awk &#39;/root/ {print $0}  {print $0} &#39; a.txt</code></pre><p>打印文件每行的信息，最前方追加行号和该行总列数，用tab键分隔</p><pre><code class="shell">awk -F&#39;:&#39; &#39;{print NR &quot;\t&quot; NF &quot;\t&quot; $0}&#39; a.txt</code></pre><h2 id="报表统计数据"><a href="#报表统计数据" class="headerlink" title="报表统计数据"></a>报表统计数据</h2><pre><code class="shell"># 统计报表：合计每人1月工资，0：manager，1：workerTom      0   2012-12-11      car     3000John     1   2013-01-13      bike    1000vivi     1   2013-01-18      car     2800Tom      0   2013-01-20      car     2500John     1   2013-01-28      bike    3500</code></pre><h3 id="需求-1"><a href="#需求-1" class="headerlink" title="需求"></a>需求</h3><p>统计01月员工工资</p><pre><code class="shell">awk &#39;{split($3,date,&quot;-&quot;);if(date[2]==&quot;01&quot;){name[$1]+=$5}} END{for(i in name){print i &quot;\t&quot; name[i]}}&#39; a.txt</code></pre><p>统计01月员工工资，员工类型为0，末尾追加M，为1末尾追加W</p><pre><code class="shell">awk &#39;{split($3,date,&quot;-&quot;);if(date[2]==&quot;01&quot;){name[$1]+=$5};if($2==&quot;0&quot;){role[$1]=&quot;M&quot;}else{role[$1]=&quot;W&quot;}} END{for(i in name){print i &quot;\t&quot; name[i] &quot;\t&quot; role[i]}}&#39; a.txt</code></pre>]]></content>
+      
+      
+      <categories>
+          
+          <category> 大数据 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Linux </tag>
+            
+            <tag> Shell </tag>
+            
+            <tag> AWK </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Spark RDD转换成DataFrame的两种方式</title>
       <link href="/2019/11/24/Spark%20RDD%E8%BD%AC%E6%8D%A2%E6%88%90DataFrame%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F/"/>
       <url>/2019/11/24/Spark%20RDD%E8%BD%AC%E6%8D%A2%E6%88%90DataFrame%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F/</url>
@@ -23,6 +52,8 @@
             <tag> Spark core </tag>
             
             <tag> Spark SQL </tag>
+            
+            <tag> Spark </tag>
             
         </tags>
       
