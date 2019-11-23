@@ -5,12 +5,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hello World - 阳春的blog</title>
+    <title>Spark RDD转换成DataFrame的两种方式 - 阳春的blog</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="google" content="notranslate" />
     <meta name="keywords" content="TriDiamond Obsidian,"> 
-    <meta name="description" content="专注于大数据相关,Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any pr,"> 
+    <meta name="description" content="专注于大数据相关,Spark SQL支持两种方式将现有RDD转换为DataFrame。第一种方法使用反射来推断RDD的schema并创建DataSet然后将其转化为DataFrame。这种基于反射方法十分简便，但是前,"> 
     <meta name="author" content="阳春"> 
     <link rel="alternative" href="atom.xml" title="阳春的blog" type="application/atom+xml"> 
     <link rel="icon" href="/img/favicon.png"> 
@@ -43,7 +43,7 @@
     <div class="navigation animated fadeIn fast delay-1s">
         <img id="home-icon" class="icon-home" src="/img/favicon.png" alt="" data-url="http://yoursite.com">
         <div id="play-icon" title="Play/Pause" class="iconfont icon-play"></div>
-        <h3 class="subtitle">Hello World</h3>
+        <h3 class="subtitle">Spark RDD转换成DataFrame的两种方式</h3>
         <div class="social">
             <!--        <div class="like-icon">-->
             <!--            <a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
@@ -73,24 +73,25 @@
         <div class="else">
             <p class="animated fadeInDown">
                 
-                <a href="javascript:;" target="_blank" rel="noopener"><b>「 </b>文章<b> 」</b></a>
+                <a href="/categories/大数据"><b>「
+                    </b>大数据<b> 」</b></a>
                 
-                十一月 23, 2019
+                十一月 24, 2019
             </p>
-            <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/hello-world/" title="Hello World" class="">Hello World</a>
+            <h3 class="post-title animated fadeInDown"><a href="/2019/11/24/Spark%20RDD%E8%BD%AC%E6%8D%A2%E6%88%90DataFrame%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E5%BC%8F/" title="Spark RDD转换成DataFrame的两种方式" class="">Spark RDD转换成DataFrame的两种方式</a>
             </h3>
             
             <p class="post-count animated fadeInDown">
                 
                 <span>
                     <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                    1.8k
+                    10k
                 </span>
                 
                 
                 <span>
                     <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                    2 mins.
+                    9 mins.
                 </span>
                 
                 
@@ -102,6 +103,8 @@
                 
             </p>
             
+            
+            <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark-SQL/" rel="tag">Spark SQL</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark-core/" rel="tag">Spark core</a></li></ul>
             
         </div>
     </div>
@@ -122,15 +125,177 @@
 <div class="article">
     <div class='main'>
         <div class="content markdown animated fadeIn">
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre><code class="bash">$ hexo new &quot;My New Post&quot;</code></pre>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><pre><code class="bash">$ hexo server</code></pre>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><pre><code class="bash">$ hexo generate</code></pre>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><pre><code class="bash">$ hexo deploy</code></pre>
-<p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+            <p>Spark SQL支持两种方式将现有RDD转换为DataFrame。<br>第一种方法使用反射来推断RDD的schema并创建DataSet然后将其转化为DataFrame。这种基于反射方法十分简便，但是前提是在您编写Spark应用程序时就已经知道RDD的schema类型。<br>第二种方法是通过编程接口，使用您构建的StructType，然后将其应用于现有RDD。虽然此方法很麻烦，但它允许您在运行之前并不知道列及其类型的情况下构建DataSet<br>        方法如下：<br>            1.将RDD转换成Rows<br>            2.按照第一步Rows的结构定义StructType<br>            3.基于rows和StructType使用createDataFrame创建相应的DF</p>
+<p><strong>测试数据为order.data</strong></p>
+<pre><code>1   小王  电视  12  2015-08-01 09:08:31
+1   小王  冰箱  24  2015-08-01 09:08:14
+2   小李  空调  12  2015-09-02 09:01:31</code></pre><p><strong>代码如下:</strong></p>
+<pre><code class="scala">object RDD2DF {
+
+  /**
+    * 主要有两种方式
+    *   第一种是在已经知道schema已经知道的情况下，我们使用反射把RDD转换成DS，进而转换成DF
+    *   第二种是你不能提前定义好case class，例如数据的结构是以String类型存在的。我们使用接口自定义一个schema
+    * @param args
+    */
+  def main(args: Array[String]): Unit = {
+
+    val spark=SparkSession.builder()
+      .appName(&quot;DFDemo&quot;)
+      .master(&quot;local[2]&quot;)
+      .getOrCreate()
+
+//    rdd2DFFunc1(spark)
+
+    rdd2DFFunc2(spark)
+    spark.stop()
+  }
+
+  /**
+    * 提前定义好case class
+    * @param spark
+    */
+  def rdd2DFFunc1(spark:SparkSession): Unit ={
+    import spark.implicits._
+    val orderRDD=spark.sparkContext.textFile(&quot;F:\\JAVA\\WorkSpace\\spark\\src\\main\\resources\\order.data&quot;)
+    val orderDF=orderRDD.map(_.split(&quot;\t&quot;))
+      .map(attributes=&gt;Order(attributes(0),attributes(1),attributes(2),attributes(3),attributes(4)))
+      .toDF()
+    orderDF.show()
+    Thread.sleep(1000000)
+  }
+
+  /**
+    *总结：第二种方式就是通过最基础的DF接口方法，将
+    * @param spark
+    */
+  def rdd2DFFunc2(spark:SparkSession): Unit ={
+    //TODO:   1.将RDD转换成Rows   2.按照第一步Rows的结构定义StructType  3.基于rows和StructType使用createDataFrame创建相应的DF
+    val orderRDD=spark.sparkContext.textFile(&quot;F:\\JAVA\\WorkSpace\\spark\\src\\main\\resources\\order.data&quot;)
+
+    //TODO:   1.将RDD转换成Rows
+    val rowsRDD=orderRDD
+//      .filter((str:String)=&gt;{val arr=str.split(&quot;\t&quot;);val res=arr(1)!=&quot;小李&quot;;res})
+      .map(_.split(&quot;\t&quot;))
+      .map(attributes=&gt;Row(attributes(0).trim,attributes(1),attributes(2),attributes(3).trim,attributes(4)))
+
+    //TODO:   2.按照第一步Rows的结构定义StructType
+    val schemaString=&quot;id|name|commodity|age|date&quot;
+    val fields=schemaString.split(&quot;\\|&quot;)
+      .map(filedName=&gt;StructField(filedName,StringType,nullable = true))
+    val schema=StructType(fields)
+
+    //TODO:   3.基于rows和StructType使用createDataFrame创建相应的DF
+   val orderDF= spark.createDataFrame(rowsRDD,schema)
+    orderDF.show()
+    orderDF.groupBy(&quot;name&quot;).count().show()
+    orderDF.select(&quot;name&quot;,&quot;commodity&quot;).show()
+    Thread.sleep(10000000)
+  }
+}
+case class Order(id:String,name:String,commodity:String,age:String,date:String)</code></pre>
+<h1 id="生产中创建DataFrame代码举例"><a href="#生产中创建DataFrame代码举例" class="headerlink" title="生产中创建DataFrame代码举例"></a>生产中创建DataFrame代码举例</h1><p>在实际生产环境中，我们其实选择的是方式二这种进行创建DataFrame的，因为我们生产中很难提前定义case class ，因为业务处理之后字段常常会发生意想不到的变化，所以一定要掌握这种方法。</p>
+<h2 id="测试数据"><a href="#测试数据" class="headerlink" title="测试数据"></a>测试数据</h2><pre><code>baidu   CN  A   E   [01/May/2018:02:15:52 +0800]    2   61.237.59.0 -   112.29.213.35:80    0   movieshow2000.edu.chinaren.com  GET http://movieshow2000.edu.chinaren.com/user_upload/15316339776271455.mp4 HTTP/1.1    -   bytes 13869056-13885439/25136186    TCP_HIT/206 112.29.213.35   video/mp4   16374   16384   -:0 0   0   -   -   -   11451601    -   &quot;JSP3/2.0.14&quot;   &quot;-&quot; &quot;-&quot; &quot;-&quot; http    -   2   v1.go2yd.com    0.002   25136186    16384   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   1531818470104-11451601-112.29.213.66#2705261172 644514568
+baidu   CN  A   E   [01/May/2018:02:25:33 +0800]    2   61.232.37.228   -   112.29.213.35:80    0   github.com  GET http://github.com/user_upload/15316339776271/44y.mp4    HTTP/1.1    -   bytes 13869056-13885439/25136186    TCP_HIT/206 112.29.213.35   video/mp4   83552   16384   -:0 0   0   -   -   -   11451601    -   &quot;JSP3/2.0.14&quot;   &quot;-&quot; &quot;-&quot; &quot;-&quot; http    -   2   v1.go2yd.com    0.002   25136186    16384   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   1531818470104-11451601-112.29.213.66#2705261172 644514568</code></pre><h2 id="Schema方法类"><a href="#Schema方法类" class="headerlink" title="Schema方法类"></a>Schema方法类</h2><pre><code class="scala">import org.apache.spark.sql.Row
+import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType}
+
+object LogConverUtil {
+
+  private val struct=StructType(
+    Array(
+      StructField(&quot;domain&quot;,StringType)
+      ,StructField(&quot;url&quot;,StringType)
+      ,StructField(&quot;pv&quot;,LongType)
+      ,StructField(&quot;traffic&quot;,LongType)
+      ,StructField(&quot;date&quot;,StringType)
+    )
+  )
+  def getStruct():StructType={
+    struct
+  }
+
+  def parseLog(logLine:String): Row ={
+    val sourceFormat=new SimpleDateFormat(&quot;[dd/MMM/yyyy:hh:mm:ss +0800]&quot;,Locale.ENGLISH)
+    val targetFormat=new SimpleDateFormat(&quot;yyyyMMddhh&quot;)
+
+    try{
+
+      val fields=logLine.split(&quot;\t&quot;)
+      val domain=fields(10)
+      val url=fields(12)
+      val pv=1L
+      val traffic=fields(19).trim.toLong
+      val date=getFormatedDate(fields(4),sourceFormat,targetFormat)
+
+      Row(domain,url,pv,traffic,date)
+    }catch {
+      case e:Exception=&gt;Row(0)
+    }
+  }
+  /**
+    *
+    * @param sourceDate  Log中的未格式化日期   [01/May/2018:01:09:45 +0800]
+    * @return  按照需求格式化字段      2018050101
+    */
+  def getFormatedDate(sourceDate: String, sourceFormat: SimpleDateFormat, targetFormat: SimpleDateFormat) = {
+    val targetTime=targetFormat.format(sourceFormat.parse(sourceDate))
+    targetTime
+  }
+
+}</code></pre>
+<h2 id="RDD2DataFrame主类"><a href="#RDD2DataFrame主类" class="headerlink" title="RDD2DataFrame主类"></a>RDD2DataFrame主类</h2><pre><code class="scala">import org.apache.spark.sql.SparkSession
+
+object SparkCleanJob {
+  def main(args: Array[String]): Unit = {
+    val spark=SparkSession.builder()
+      .master(&quot;local[2]&quot;)
+      .appName(&quot;SparkCleanJob&quot;)
+      .getOrCreate()
+
+    val logRDD=spark.sparkContext.textFile(&quot;file:///D:/baidu.log&quot;)
+//    logRDD.take(2).foreach(println(_))
+
+    //调用LogConverUtil里的parseLog方法和getStruct方法获得Rows对象和StructType对象
+    val logDF=spark.createDataFrame(logRDD.map(LogConverUtil.parseLog(_)),LogConverUtil.getStruct())
+    logDF.show(false)
+    logDF.printSchema()
+  }
+}</code></pre>
+<h2 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h2><pre><code class="sql">+------------------------------+-------------------------------------------------------------------------+---+-------+----------+
+|domain                        |url                                                                      |pv |traffic|date      |
++------------------------------+-------------------------------------------------------------------------+---+-------+----------+
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271455.mp4  |1  |16374  |2018050102|
+|github.com                    |http://github.com/user_upload/15316339776271/44y.mp4                     |1  |83552  |2018050102|
+|yooku.com                     |http://yooku.com/user_upload/15316339776271x0.html                       |1  |74986  |2018050101|
+|rw.uestc.edu.cn               |http://rw.uestc.edu.cn/user_upload/15316339776271515.mp4                 |1  |55297  |2018050101|
+|github.com                    |http://github.com/user_upload/15316339776271x05.mp4                      |1  |26812  |2018050102|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271y4.html  |1  |50392  |2018050103|
+|github.com                    |http://github.com/user_upload/15316339776271x15.html                     |1  |40092  |2018050101|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/153163397762714z.mp4   |1  |8368   |2018050102|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271/5z.html |1  |29677  |2018050103|
+|rw.uestc.edu.cn               |http://rw.uestc.edu.cn/user_upload/153163397762710w.mp4                  |1  |26124  |2018050102|
+|yooku.com                     |http://yooku.com/user_upload/15316339776271yz.mp4                        |1  |32219  |2018050101|
+|yooku.com                     |http://yooku.com/user_upload/153163397762713w.html                       |1  |90389  |2018050101|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271z/.html  |1  |15623  |2018050101|
+|yooku.com                     |http://yooku.com/user_upload/1531633977627142.html                       |1  |53453  |2018050103|
+|yooku.com                     |http://yooku.com/user_upload/15316339776271230.mp4                       |1  |20309  |2018050102|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271/4w1.html|1  |87804  |2018050103|
+|movieshow2000.edu.chinaren.com|http://movieshow2000.edu.chinaren.com/user_upload/15316339776271y5y.html |1  |69469  |2018050103|
+|yooku.com                     |http://yooku.com/user_upload/15316339776271011/.mp4                      |1  |3782   |2018050103|
+|github.com                    |http://github.com/user_upload/15316339776271wzw.mp4                      |1  |89642  |2018050102|
+|github.com                    |http://github.com/user_upload/15316339776271/1/.mp4                      |1  |63551  |2018050103|
++------------------------------+-------------------------------------------------------------------------+---+-------+----------+
+only showing top 20 rows
+
+root
+ |-- domain: string (nullable = true)
+ |-- url: string (nullable = true)
+ |-- pv: long (nullable = true)
+ |-- traffic: long (nullable = true)
+ |-- date: string (nullable = true)
+
+Process finished with exit code 0</code></pre>
+<p><strong>注:除了这种使用RDD读取文本进而转化成DataFrame之外，我们也会使用自定义DefaultSource来直接将text转化成DataFrame</strong></p>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls"
@@ -189,7 +354,7 @@
             <div class="box sticky animated fadeInRight faster">
                 <div id="toc" class="subbox">
                     <h4>目录</h4>
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Quick-Start"><span class="toc-number">1.</span> <span class="toc-text">Quick Start</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Create-a-new-post"><span class="toc-number">1.1.</span> <span class="toc-text">Create a new post</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Run-server"><span class="toc-number">1.2.</span> <span class="toc-text">Run server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Generate-static-files"><span class="toc-number">1.3.</span> <span class="toc-text">Generate static files</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-to-remote-sites"><span class="toc-number">1.4.</span> <span class="toc-text">Deploy to remote sites</span></a></li></ol></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#生产中创建DataFrame代码举例"><span class="toc-number">1.</span> <span class="toc-text">生产中创建DataFrame代码举例</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#测试数据"><span class="toc-number">1.1.</span> <span class="toc-text">测试数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Schema方法类"><span class="toc-number">1.2.</span> <span class="toc-text">Schema方法类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RDD2DataFrame主类"><span class="toc-number">1.3.</span> <span class="toc-text">RDD2DataFrame主类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结果"><span class="toc-number">1.4.</span> <span class="toc-text">结果</span></a></li></ol></li></ol>
                 </div>
             </div>
             
