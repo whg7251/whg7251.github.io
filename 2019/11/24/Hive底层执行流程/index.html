@@ -1,0 +1,495 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN" class="loading">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hive底层执行流程 - 阳春的blog</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate" />
+    <meta name="keywords" content="TriDiamond Obsidian,"> 
+    <meta name="description" content="专注于大数据相关,Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL,"> 
+    <meta name="author" content="阳春"> 
+    <link rel="alternative" href="atom.xml" title="阳春的blog" type="application/atom+xml"> 
+    <link rel="icon" href="/img/favicon.png"> 
+    <link href="https://fonts.loli.net/css?family=Roboto+Mono|Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_1429596_nzgqgvnmkjb.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.7.2/animate.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/codemirror/5.48.4/codemirror.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/codemirror/5.48.4/theme/dracula.css">
+    <link rel="stylesheet" href="/css/obsidian.css">
+    <link rel="stylesheet" href="/css/ball-atom.min.css">
+</head>
+
+
+<body class="loading">
+    <div class="loader">
+        <div class="la-ball-atom la-2x">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+    <span id="config-title" style="display:none">阳春的blog</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div class="scrollbar gradient-bg-rev"></div>
+<div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <div class="navigation animated fadeIn fast delay-1s">
+        <img id="home-icon" class="icon-home" src="/img/favicon.png" alt="" data-url="http://yoursite.com">
+        <div id="play-icon" title="Play/Pause" class="iconfont icon-play"></div>
+        <h3 class="subtitle">Hive底层执行流程</h3>
+        <div class="social">
+            <!--        <div class="like-icon">-->
+            <!--            <a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+            <!--        </div>-->
+            <div>
+                <div class="share">
+                    
+                        <a href="javascript:;" target="_blank" rel="noopener" class="iconfont icon-share1"></a>
+                        <div class="share-component-cc" data-disabled="facebook,douban,linkedin,diandian,tencent,google"></div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="section">
+        <div class=article-header-wrapper>
+    <div class="article-header">
+        <div class="article-cover animated fadeIn" style="
+            animation-delay: 600ms;
+            animation-duration: 1.2s;
+            background-image: 
+                radial-gradient(ellipse closest-side, rgba(0, 0, 0, 0.65), #100e17),
+                url(/img/cover.jpg);">
+        </div>
+        <div class="else">
+            <p class="animated fadeInDown">
+                
+                <a href="/categories/大数据"><b>「
+                    </b>大数据<b> 」</b></a>
+                
+                十一月 24, 2019
+            </p>
+            <h3 class="post-title animated fadeInDown"><a href="/2019/11/24/Hive%E5%BA%95%E5%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" title="Hive底层执行流程" class="">Hive底层执行流程</a>
+            </h3>
+            
+            <p class="post-count animated fadeInDown">
+                
+                <span>
+                    <b class="iconfont icon-text2"></b> <i>文章字数</i>
+                    17k
+                </span>
+                
+                
+                <span>
+                    <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
+                    15 mins.
+                </span>
+                
+                
+                
+                <span id="busuanzi_container_page_pv">
+                    <b class="iconfont icon-read"></b> <i>阅读次数</i>
+                    <span id="busuanzi_value_page_pv">0</span>
+                </span>
+                
+            </p>
+            
+            
+            <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Hive/" rel="tag">Hive</a></li></ul>
+            
+        </div>
+    </div>
+</div>
+
+<div class="screen-gradient-after">
+    <div class="screen-gradient-content">
+        <div class="screen-gradient-content-inside">
+            <div class="bold-underline-links screen-gradient-sponsor">
+                <p>
+                    <span class="animated fadeIn delay-1s"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="article">
+    <div class='main'>
+        <div class="content markdown animated fadeIn">
+            <p>Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL转化为MapReduce任务的呢？</p>
+<p>Hive 底层执行流程<br>我们以下面这个SQL为例</p>
+<p>FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, sum(substr(src.value,4)) GROUP BY src.key;<br>整个编译过程分为六个阶段：<br>1.Antlr定义SQL的语法规则，完成SQL词法，语法解析，将SQL<br>转化为抽象语法树AST Tree<br>HiveLexerX，HiveParser分别是Antlr对SQL编译后自动生成的词法解析和语法解析类，在这两个类中进行复杂的解析。<br>例子中的AST tree为</p>
+<p>ABSTRACT SYNTAX TREE:<br>(TOK_QUERY (TOK_FROM (TOK_TABREF src))<br>(TOK_INSERT (TOK_DESTINATION (TOK_TAB dest_g1))<br>(TOK_SELECT (TOK_SELEXPR (TOK_COLREF src key))<br>(TOK_SELEXPR (TOK_FUNCTION sum (TOK_FUNCTION substr (TOK_COLREF src value) 4))))<br>(TOK_GROUPBY (TOK_COLREF src key))))<br>2.遍历AST Tree，抽象出查询的基本组成单元QueryBlock<br>AST Tree 仍然非常复杂，不够结构化，不方便直接翻译为 MapReduce 程序， AST<br>Tree 转化为 QueryBlock(QB)就是将 SQL 进一部抽象和结构化。<br>AST Tree 生成 QueryBlock 的过程是一个递归的过程，先序遍历 AST Tree ，遇到不<br>同的Token 节点(理解为特殊标记)，保存到相应的属性中，主要包含以下几个过程</p>
+<p>TOK_QUERY =&gt; 创建 QB 对象，循环递归子节点<br>TOK_FROM =&gt; 将表名语法部分保存到 QB 对象的 aliasToTabs 等属性中<br>TOK_INSERT =&gt; 循环递归子节点<br>TOK_DESTINATION =&gt; 将输出目标的语法部分保存在 QBParseInfo 对象的nameToDest 属性中<br>TOK_SELECT =&gt; 分别将查询表达式的语法部分保存在 destToSelExpr 、destToAggregationExprs 、 destToDistinctFuncExprs 三个属性中<br>TOK_WHERE =&gt; 将 Where 部分的语法保存在 QBParseInfo 对象的destToWhereExpr 属性中<br>3.遍历QueryBlock，翻译为执行操作树OperatorTree<br>Hive 最终生成的 MapReduce 任务， Map 阶段和 Reduce 阶段均由 Operator Tree<br>组成。逻辑操作符，就是在 Map 阶段或者 Reduce 阶段完成单一特定的操作。<br>基本的操作符包括<br>TableScanOperator、SelectOperator、FilterOperator、JoinOperator、GroupByOperator、ReduceSinkOperator<br>QueryBlock 生成 Operator Tree 就是遍历上一个过程中生成的 QB 和 QBParseInfo<br>对象的保存<br>语法的属性，包含如下几个步骤：</p>
+<p>QB#aliasToSubq =&gt; 有子查询，递归调用<br>QB#aliasToTabs =&gt; TableScanOperator<br>QBParseInfo#joinExpr =&gt; QBJoinTree =&gt; ReduceSinkOperator + JoinOperator<br>QBParseInfo#destToWhereExpr =&gt; FilterOperator<br>QBParseInfo#destToGroupby =&gt; ReduceSinkOperator +GroupByOperator<br>QBParseInfo#destToOrderby =&gt; ReduceSinkOperator + ExtractOperator<br>由于 Join/GroupBy/OrderBy 均需要在 Reduce 阶段完成，所以在生成相应操作的Operator 之前都会先生成一个 ReduceSinkOperator ，将字段组合并序列化为 Reduce Key/value,Partition Key<br>SQL例子翻译成OperatorTree</p>
+<p>STAGE PLANS:<br>  Stage: Stage-1<br>    Map Reduce<br>      Alias -&gt; Map Operator Tree:<br>        src<br>            Reduce Output Operator<br>              key expressions:<br>                    expr: key<br>                    type: string<br>              sort order: +<br>              Map-reduce partition columns:<br>                    expr: rand()<br>                    type: double<br>              tag: -1<br>              value expressions:<br>                    expr: substr(value, 4)<br>                    type: string<br>      Reduce Operator Tree:<br>        Group By Operator<br>          aggregations:<br>                expr: sum(UDFToDouble(VALUE.0))<br>          keys:<br>                expr: KEY.0<br>                type: string<br>          mode: partial1<br>          File Output Operator<br>            compressed: false<br>            table:<br>                input format: org.apache.hadoop.mapred.SequenceFileInputFormat<br>                output format: org.apache.hadoop.mapred.SequenceFileOutputFormat<br>                name: binary_table</p>
+<p>  Stage: Stage-2<br>    Map Reduce<br>      Alias -&gt; Map Operator Tree:<br>        /tmp/hive-zshao/67494501/106593589.10001<br>          Reduce Output Operator<br>            key expressions:<br>                  expr: 0<br>                  type: string<br>            sort order: +<br>            Map-reduce partition columns:<br>                  expr: 0<br>                  type: string<br>            tag: -1<br>            value expressions:<br>                  expr: 1<br>                  type: double<br>      Reduce Operator Tree:<br>        Group By Operator<br>          aggregations:<br>                expr: sum(VALUE.0)<br>          keys:<br>                expr: KEY.0<br>                type: string<br>          mode: final<br>          Select Operator<br>            expressions:<br>                  expr: 0<br>                  type: string<br>                  expr: 1<br>                  type: double<br>            Select Operator<br>              expressions:<br>                    expr: UDFToInteger(0)<br>                    type: int<br>                    expr: 1<br>                    type: double<br>              File Output Operator<br>                compressed: false<br>                table:<br>                    input format: org.apache.hadoop.mapred.TextInputFormat<br>                    output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat<br>                    serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe<br>                    name: dest_g1</p>
+<p>  Stage: Stage-0<br>    Move Operator<br>      tables:<br>            replace: true<br>            table:<br>                input format: org.apache.hadoop.mapred.TextInputFormat<br>                output format: org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat<br>                serde: org.apache.hadoop.hive.serde2.dynamic_type.DynamicSerDe<br>                name: dest_g1<br>4.Logical Optimizer进行OperatorTree变换，合并不必要的<br>使用ReduceSinkOperator，减少shuffle数据量。大部分逻辑层优化器通过变换 OperatorTree ，合并操作符，达到减少 MapReduce Job ，减少 shuffle 数据量的目的。<br>5.遍历OperatorTree，翻译为Task tree<br>OperatorTree 转化为 Task tree的过程分为下面几个阶段</p>
+<p>对输出表生成 MoveTask<br>从 OperatorTree 的其中一个根节点向下深度优先遍历<br>ReduceSinkOperator 标示 Map/Reduce 的界限，多个 Job 间的界限<br>遍历其他根节点，遇过碰到 JoinOperator 合并 MapReduceTask<br>生成 StatTask 更新元数据<br>剪断 Map 与 Reduce 间的 Operator 的关系<br>6.PhysicalOptimizer 对Task tree优化，生成最终的执行计划</p>
+<p>7、执行</p>
+<p>以上就是HiveSQL的底层执行流程</p>
+<p>打印SQL运行相关信息<br>我们在开发中，可以使用下面这个语句来打印SQL语句的相关运行信息</p>
+<p>EXPLAIN [EXTENDED|DEPENDENCY|AUTHORIZATION] query<br>注:我的版本是hive-1.1.0-cdh5.7.0，所以只可用三个可选属性，如果您版本比较高的话，可以去官网查阅对应属性<br>下面我对三种可选属性进行简单介绍</p>
+<p>EXTENDED<br>EXTENDED：打印SQL解析成AST&amp;Operator Tree最全面的信息</p>
+<p>hive (g6_hadoop)&gt; explain EXTENDED insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>OK<br>Explain<br>ABSTRACT SYNTAX TREE:</p>
+<p>TOK_QUERY<br>   TOK_FROM<br>      TOK_TABREF<br>         TOK_TABNAME<br>            g6_access_orc<br>   TOK_INSERT<br>      TOK_DESTINATION<br>         TOK_TAB<br>            TOK_TABNAME<br>               g6_access_orc_explain<br>      TOK_SELECT<br>         TOK_SELEXPR<br>            TOK_TABLE_OR_COL<br>               domain<br>         TOK_SELEXPR<br>            TOK_FUNCTION<br>               count<br>               1<br>            num<br>      TOK_WHERE<br>         &gt;<br>            TOK_TABLE_OR_COL<br>               traffic<br>            ‘99900’<br>      TOK_GROUPBY<br>         TOK_TABLE_OR_COL<br>            domain</p>
+<p>STAGE DEPENDENCIES:<br>  Stage-1 is a root stage<br>  Stage-0 depends on stages: Stage-1<br>  Stage-2 depends on stages: Stage-0</p>
+<p>STAGE PLANS:<br>  Stage: Stage-1<br>    Map Reduce<br>      Map Operator Tree:<br>          TableScan<br>            alias: g6_access_orc<br>            Statistics: Num rows: 260326 Data size: 188215698 Basic stats: COMPLETE Column stats: NONE<br>            GatherStats: false<br>            Filter Operator<br>              isSamplingPred: false<br>              predicate: (traffic &gt; 99900) (type: boolean)<br>              Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>              Select Operator<br>                expressions: domain (type: string)<br>                outputColumnNames: domain<br>                Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                Group By Operator<br>                  aggregations: count(1)<br>                  keys: domain (type: string)<br>                  mode: hash<br>                  outputColumnNames: _col0, _col1<br>                  Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                  Reduce Output Operator<br>                    key expressions: _col0 (type: string)<br>                    sort order: +<br>                    Map-reduce partition columns: _col0 (type: string)<br>                    Statistics: Num rows: 86775 Data size: 62738325 Basic stats: COMPLETE Column stats: NONE<br>                    tag: -1<br>                    value expressions: _col1 (type: bigint)<br>                    auto parallelism: false<br>      Path -&gt; Alias:<br>        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc [g6_access_orc]<br>      Path -&gt; Partition:<br>        hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc<br>          Partition<br>            base file name: g6_access_orc<br>            input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat<br>            output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat<br>            properties:<br>              COLUMN_STATS_ACCURATE true<br>              bucket_count -1<br>              columns cdn,region,level,time,ip,domain,url,traffic<br>              columns.comments<br>              columns.types string:string:string:string:string:string:string:bigint<br>              field.delim<br>              file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat<br>              file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat<br>              location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc<br>              name g6_hadoop.g6_access_orc<br>              numFiles 1<br>              numRows 260326<br>              rawDataSize 188215698<br>              serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}<br>              serialization.format<br>              serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde<br>              totalSize 8567798<br>              transient_lastDdlTime 1557676635<br>            serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde</p>
+<pre><code>          input format: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          output format: org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+          properties:
+            COLUMN_STATS_ACCURATE true
+            bucket_count -1
+            columns cdn,region,level,time,ip,domain,url,traffic
+            columns.comments 
+            columns.types string:string:string:string:string:string:string:bigint
+            field.delim     
+            file.inputformat org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+            file.outputformat org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat
+            location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc
+            name g6_hadoop.g6_access_orc
+            numFiles 1
+            numRows 260326
+            rawDataSize 188215698
+            serialization.ddl struct g6_access_orc { string cdn, string region, string level, string time, string ip, string domain, string url, i64 traffic}
+            serialization.format    
+            serialization.lib org.apache.hadoop.hive.ql.io.orc.OrcSerde
+            totalSize 8567798
+            transient_lastDdlTime 1557676635
+          serde: org.apache.hadoop.hive.ql.io.orc.OrcSerde
+          name: g6_hadoop.g6_access_orc
+        name: g6_hadoop.g6_access_orc
+  Truncated Path -&gt; Alias:
+    /g6_hadoop.db/g6_access_orc [g6_access_orc]
+  Needs Tagging: false
+  Reduce Operator Tree:
+    Group By Operator
+      aggregations: count(VALUE._col0)
+      keys: KEY._col0 (type: string)
+      mode: mergepartial
+      outputColumnNames: _col0, _col1
+      Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
+      File Output Operator
+        compressed: false
+        GlobalTableId: 1
+        directory: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000
+        NumFilesPerFileSink: 1
+        Statistics: Num rows: 43387 Data size: 31368801 Basic stats: COMPLETE Column stats: NONE
+        Stats Publishing Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/
+        table:
+            input format: org.apache.hadoop.mapred.TextInputFormat
+            output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+            properties:
+              COLUMN_STATS_ACCURATE true
+              bucket_count -1
+              columns domain,num
+              columns.comments 
+              columns.types string:bigint
+              field.delim |
+              file.inputformat org.apache.hadoop.mapred.TextInputFormat
+              file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain
+              name g6_hadoop.g6_access_orc_explain
+              numFiles 1
+              numRows 7
+              rawDataSize 149
+              serialization.ddl struct g6_access_orc_explain { string domain, i64 num}
+              serialization.format |
+              serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              totalSize 156
+              transient_lastDdlTime 1558661108
+            serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+            name: g6_hadoop.g6_access_orc_explain
+        TotalFiles: 1
+        GatherStats: true
+        MultiFileSpray: false</code></pre><p>  Stage: Stage-0<br>    Move Operator<br>      tables:<br>          replace: true<br>          source: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000<br>          table:<br>              input format: org.apache.hadoop.mapred.TextInputFormat<br>              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat<br>              properties:<br>                COLUMN_STATS_ACCURATE true<br>                bucket_count -1<br>                columns domain,num<br>                columns.comments<br>                columns.types string:bigint<br>                field.delim |<br>                file.inputformat org.apache.hadoop.mapred.TextInputFormat<br>                file.outputformat org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat<br>                location hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain<br>                name g6_hadoop.g6_access_orc_explain<br>                numFiles 1<br>                numRows 7<br>                rawDataSize 149<br>                serialization.ddl struct g6_access_orc_explain { string domain, i64 num}<br>                serialization.format |<br>                serialization.lib org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe<br>                totalSize 156<br>                transient_lastDdlTime 1558661108<br>              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe<br>              name: g6_hadoop.g6_access_orc_explain</p>
+<p>  Stage: Stage-2<br>    Stats-Aggr Operator<br>      Stats Aggregation Key Prefix: hdfs://ruozeclusterg6/user/hive/warehouse/g6_hadoop.db/g6_access_orc_explain/.hive-staging_hive_2019-05-23_23-37-06_889_2210604962026719569-1/-ext-10000/</p>
+<p>Time taken: 1.359 seconds, Fetched: 198 row(s)<br>AUTHORIZATION<br>AUTHORIZATION :打印SQL运行相关权限</p>
+<p>hive (g6_hadoop)&gt; explain AUTHORIZATION insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>OK<br>Explain<br>INPUTS:<br>  g6_hadoop@g6_access_orc<br>OUTPUTS:<br>  g6_hadoop@g6_access_orc_explain<br>CURRENT_USER:<br>  hadoop<br>OPERATION:<br>  QUERY<br>AUTHORIZATION_FAILURES:<br>  No privilege ‘Update’ found for outputs { database:g6_hadoop, table:g6_access_orc_explain}<br>  No privilege ‘Select’ found for inputs { database:g6_hadoop, table:g6_access_orc, columnName:domain}<br>Time taken: 0.599 seconds, Fetched: 11 row(s)<br>DEPENDENCY<br>DEPENDENCY:打印SQL输入表的相关信息</p>
+<p>hive (g6_hadoop)&gt; explain DEPENDENCY insert  OVERWRITE table g6_access_orc_explain select domain,count(1) num from g6_access_orc where traffic&gt;’99900’ group by domain;<br>Explain<br>{“input_partitions”:[],”input_tables”:[{“tablename”:”g6_hadoop@g6_access_orc”,”tabletype”:”MANAGED_TABLE”}]}<br>Time taken: 0.135 seconds, Fetched: 1 row(s)</p>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls"
+                data-autoplay="false">
+                <source type="audio/mpeg" src="">
+            </audio>
+            
+            <ul id="audio-list" style="display:none">
+                
+                
+                <li title='0' data-url='/statics/chengdu.mp3'></li>
+                
+                    
+            </ul>
+            
+            
+            
+    <div id='gitalk-container' class="comment link"
+        data-ae='true'
+        data-ci='ec894e2b66f752e8b7fb'
+        data-cs='3ccc2e92bb350688fe2c2dc2930189b62622bfb1'
+        data-r='blog-comments'
+        data-o='TriDiamond'
+        data-a='TriDiamond'
+        data-d=''
+    >留言</div>
+
+
+            
+            
+        </div>
+        <div class="sidebar">
+            <div class="box animated fadeInRight">
+                <div class="subbox">
+                    <img src="https://res.cloudinary.com/tridiamond/image/upload/v1573019751/TriDiamond_logo_ui_xeublz.jpg" height=300 width=300></img>
+                    <p>阳春</p>
+                    <span>Think like an artist, develop like an artisan</span>
+                    <dl>
+                        <dd><a href="https://github.com/TriDiamond" target="_blank"><span
+                                    class=" iconfont icon-github"></span></a></dd>
+                        <dd><a href="https://twitter.com/TriDiamond6" target="_blank"><span
+                                    class=" iconfont icon-twitter"></span></a></dd>
+                        <dd><a href="https://stackoverflow.com/users/7602324/tridiamond?tab=profile" target="_blank"><span
+                                    class=" iconfont icon-stack-overflow"></span></a></dd>
+                    </dl>
+                </div>
+                <ul>
+                    <li><a href="/">4 <p>文章</p></a></li>
+                    <li><a href="/categories">1 <p>分类</p></a></li>
+                    <li><a href="/tags">3 <p>标签</p></a></li>
+                </ul>
+            </div>
+            
+            
+            
+            
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+    <div id="back-to-top" class="animated fadeIn faster">
+        <div class="flow"></div>
+        <span class="percentage animated fadeIn faster">0%</span>
+        <span class="iconfont icon-top02 animated fadeIn faster"></span>
+    </div>
+</body>
+<footer>
+    <p class="copyright" id="copyright">
+        &copy; 2019
+        <span class="gradient-text">
+            阳春
+        </span>.
+        Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a>
+        Theme
+        <span class="gradient-text">
+            <a href="https://github.com/TriDiamond/hexo-theme-obsidian" title="Obsidian" target="_blank" rel="noopener">Obsidian</a>
+        </span>
+        <small><a href="https://github.com/TriDiamond/hexo-theme-obsidian/blob/master/CHANGELOG.md" title="v1.4.3" target="_blank" rel="noopener">v1.4.3</a></small>
+    </p>
+</footer>
+
+<script type="text/javascript" src="https://cdn.bootcss.com/mathjax/2.7.6/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script>
+  MathJax.Hub.Config({
+    "HTML-CSS": {
+      preferredFont: "TeX",
+      availableFonts: ["STIX", "TeX"],
+      linebreaks: {
+        automatic: true
+      },
+      EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"]
+      ],
+      processEscapes: true,
+      ignoreClass: "tex2jax_ignore|dno",
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      noUndefined: {
+        attributes: {
+          mathcolor: "red",
+          mathbackground: "#FFEEEE",
+          mathsize: "90%"
+        }
+      },
+      Macros: {
+        href: "{}"
+      }
+    },
+    messageStyle: "none"
+  });
+</script>
+<script>
+  function initialMathJax() {
+    MathJax.Hub.Queue(function () {
+      var all = MathJax.Hub.getAllJax(),
+        i;
+      // console.log(all);
+      for (i = 0; i < all.length; i += 1) {
+        console.log(all[i].SourceElement().parentNode)
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  }
+
+  function reprocessMathJax() {
+    if (typeof MathJax !== 'undefined') {
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    }
+  }
+</script>
+
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/gitalk/1.5.0/gitalk.min.css">
+    <script src="//cdn.bootcss.com/gitalk/1.5.0/gitalk.min.js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/obsidian.js"></script>
+<script src="/js/jquery.truncate.js"></script>
+<script src="/js/search.js"></script>
+<script src="//cdn.bootcss.com/typed.js/2.0.10/typed.min.js"></script>
+<script src="//cdn.bootcss.com/blueimp-md5/2.12.0/js/md5.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+
+<script src="https://cdn.bootcss.com/codemirror/5.48.4/codemirror.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/javascript/javascript.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/css/css.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/xml/xml.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/clike/clike.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/php/php.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/shell/shell.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/python/python.min.js"></script>
+
+
+
+    <script src="/js/busuanzi.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            if ($('span[id^="busuanzi_"]').length) {
+                initialBusuanzi();
+            }
+        });
+    </script>
+
+
+<link rel="stylesheet" href="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="//cdn.bootcss.com/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="//www.googletagmanager.com/gtag/js?id=UA-149874671-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-149874671-1');
+    </script>
+
+
+
+
+
+<script>
+    function initialTyped () {
+        var typedTextEl = $('.typed-text');
+        if (typedTextEl && typedTextEl.length > 0) {
+            var typed = new Typed('.typed-text', {
+                strings: ["Think like an artist, develop like an artisan", "艺术家思维去思考问题，工匠创造精神去开发"],
+                typeSpeed: 90,
+                loop: true,
+                loopCount: Infinity,
+                backSpeed: 20,
+            });
+        }
+    }
+
+    if ($('.article-header') && $('.article-header').length) {
+        $(document).ready(function () {
+            initialTyped();
+        });
+    }
+</script>
+
+
+
+
+</html>

@@ -126,39 +126,35 @@
             <a href="/categories/大数据"><b>「
                 </b>大数据<b> 」</b></a>
             
-            十一月 23, 2019
+            十一月 24, 2019
         </p>
         <h3 class="post-title animated fadeInDown">
-            <a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="生产SparkStreaming数据零丢失最佳实践(含代码)" class="posttitle">生产SparkStreaming数据零丢失最佳实践(含代码)</a></h3>
+            <a href="/2019/11/24/Hive%E5%BA%95%E5%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" title="Hive底层执行流程" class="posttitle">Hive底层执行流程</a></h3>
         
         <p class="post-count animated fadeInDown">
             
             <span>
                 <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                10k
+                17k
             </span>
             
             
             <span>
                 <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                10 mins.
+                15 mins.
             </span>
             
             
         </p>
         
         
-        <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark/" rel="tag">Spark</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark-Streaming/" rel="tag">Spark Streaming</a></li></ul>
+        <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Hive/" rel="tag">Hive</a></li></ul>
         
         <div class="md-content animated fadeIn">
             
-            <pre><code class="sql">mysql&gt; use test
-mysql&gt; create table hlw_offset(
-        topic varchar(32),
-        groupid varchar(50),
-        partitions...</code></pre>
+            <p>Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL转...</p>
             
-            <span class="read-more"><a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="查看全文" class="posttitle">查看全文</a>
+            <span class="read-more"><a href="/2019/11/24/Hive%E5%BA%95%E5%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" title="查看全文" class="posttitle">查看全文</a>
                 <b class="iconfont icon-arrow-right- gradient-text"></b></span>
         </div>
     </div>
@@ -179,6 +175,62 @@ mysql&gt; create table hlw_offset(
 
     <div id="primary">
         
+<div class="post" id="post">
+    <div class="post-cover animated fadeIn" style="
+            background-image:
+            radial-gradient(ellipse closest-side, rgba(0, 0, 0, 0.65), #100e17),
+            url(/img/welcome-cover.jpg);">
+    </div>
+    <div class="else">
+        <p class="animated fadeInDown">
+            
+                <a href="/categories/大数据">
+                  <b>「 </b>大数据<b> 」</b>
+                </a>
+            
+            十一月 23, 2019
+        </p>
+        <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="生产SparkStreaming数据零丢失最佳实践(含代码)" class="posttitle">生产SparkStreaming数据零丢失最佳实践(含代码)</a></h3>
+        
+            <p class="post-count animated fadeInDown">
+                
+                    <span>
+                        <b class="iconfont icon-text2"></b> <i>文章字数</i>
+                        10k
+                    </span>
+                
+                
+                    <span>
+                        <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
+                        10 mins.
+                    </span>
+                
+                
+            </p>
+            
+                <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark/" rel="tag">Spark</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark-Streaming/" rel="tag">Spark Streaming</a></li></ul>
+            
+        
+        <div class="md-content animated fadeIn">
+            
+                <pre><code class="sql">mysql&gt; use test
+mysql&gt; create table hlw_offset(
+        topic varchar(32),
+        groupid varchar(50),
+        partitions int,
+        fromoffset bigint,
+        untiloffset bigint,
+        primary key(topic,groupid,partitions)
+        );</code></pre>
+<pre><code class="xml">&lt;scala.version&gt;2.11.8&lt;/scala.version&gt;
+&lt;spark....</code></pre>
+            
+            <span class="read-more"><a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="查看全文" class="posttitle">查看全文</a> <b class="iconfont icon-arrow-right- gradient-text"></b></span>
+        </div>
+    </div>
+</div>
+
+
     </div>
     
 </div>

@@ -46,7 +46,7 @@
                 <div class="content animated fadeIn">
                     <div class="set">
                         <h1 style="text-align: center">Archived</h1>
-                        <p style="text-align: center">「 3 」</p>
+                        <p style="text-align: center">「 4 」</p>
                         <ul class="timeline timeline-centered">
                             
                             
@@ -58,6 +58,22 @@
                                         <h2 class="timeline-title">十一月 2019</h2>
                                     </div>
                                 </li>
+                                
+                                <li class="timeline-item">
+                                    <div class="timeline-info">
+                                        <span class="gradient-text">十一月 24, 2019</span>
+                                    </div>
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <a class="timeline-title" target="_self" href="/2019/11/24/Hive%E5%BA%95%E5%B1%82%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/">Hive底层执行流程</a>
+                                        <p>
+                                            Hive并不是简简单单写SQL，因为我们要进行层层调优，如果连Hive的内部运行机制都搞不清，那么hive对我们来说仅仅是一个黑箱，高效率的调优无从谈起，所以我们很有必要了解下Hive是如何将SQL转化为MapReduce任务的呢？
+Hive 底层执行流程我们以下面这个SQL为例
+FROM src INSERT OVERWRITE TABLE dest_g1 SELECT src.key, ...
+                                        </p>
+                                    </div>
+                                </li>
+                            
                                 
                                 <li class="timeline-item">
                                     <div class="timeline-info">
