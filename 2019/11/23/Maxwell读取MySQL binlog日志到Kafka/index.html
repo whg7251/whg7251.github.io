@@ -1,0 +1,618 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN" class="loading">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maxwell读取MySQL binlog日志到Kafka - 阳春的blog</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate" />
+    <meta name="keywords" content="TriDiamond Obsidian,"> 
+    <meta name="description" content="专注于大数据相关,Maxwell读取MySQL binlog日志到Kafka启动MySQL创建maxwell的数据库和用户在MySQL中创建一个测试数据库和表前面三个步骤详见 Maxwell读取MySQL binlo,"> 
+    <meta name="author" content="阳春"> 
+    <link rel="alternative" href="atom.xml" title="阳春的blog" type="application/atom+xml"> 
+    <link rel="icon" href="/img/favicon.png"> 
+    <link href="https://fonts.loli.net/css?family=Roboto+Mono|Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_1429596_nzgqgvnmkjb.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/animate.css/3.7.2/animate.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/css/share.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/codemirror/5.48.4/codemirror.min.css">
+    <link rel="stylesheet" href="//cdn.bootcss.com/codemirror/5.48.4/theme/dracula.css">
+    <link rel="stylesheet" href="/css/obsidian.css">
+    <link rel="stylesheet" href="/css/ball-atom.min.css">
+</head>
+
+
+<body class="loading">
+    <div class="loader">
+        <div class="la-ball-atom la-2x">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+    <span id="config-title" style="display:none">阳春的blog</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div class="scrollbar gradient-bg-rev"></div>
+<div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <div class="navigation animated fadeIn fast delay-1s">
+        <img id="home-icon" class="icon-home" src="/img/favicon.png" alt="" data-url="http://yoursite.com">
+        <div id="play-icon" title="Play/Pause" class="iconfont icon-play"></div>
+        <h3 class="subtitle">Maxwell读取MySQL binlog日志到Kafka</h3>
+        <div class="social">
+            <!--        <div class="like-icon">-->
+            <!--            <a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+            <!--        </div>-->
+            <div>
+                <div class="share">
+                    
+                        <a href="javascript:;" target="_blank" rel="noopener" class="iconfont icon-share1"></a>
+                        <div class="share-component-cc" data-disabled="facebook,douban,linkedin,diandian,tencent,google"></div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="section">
+        <div class=article-header-wrapper>
+    <div class="article-header">
+        <div class="article-cover animated fadeIn" style="
+            animation-delay: 600ms;
+            animation-duration: 1.2s;
+            background-image: 
+                radial-gradient(ellipse closest-side, rgba(0, 0, 0, 0.65), #100e17),
+                url(/img/cover.jpg);">
+        </div>
+        <div class="else">
+            <p class="animated fadeInDown">
+                
+                <a href="javascript:;" target="_blank" rel="noopener"><b>「 </b>文章<b> 」</b></a>
+                
+                十一月 23, 2019
+            </p>
+            <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/Maxwell%E8%AF%BB%E5%8F%96MySQL%20binlog%E6%97%A5%E5%BF%97%E5%88%B0Kafka/" title="Maxwell读取MySQL binlog日志到Kafka" class="">Maxwell读取MySQL binlog日志到Kafka</a>
+            </h3>
+            
+            <p class="post-count animated fadeInDown">
+                
+                <span>
+                    <b class="iconfont icon-text2"></b> <i>文章字数</i>
+                    28k
+                </span>
+                
+                
+                <span>
+                    <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
+                    26 mins.
+                </span>
+                
+                
+                
+                <span id="busuanzi_container_page_pv">
+                    <b class="iconfont icon-read"></b> <i>阅读次数</i>
+                    <span id="busuanzi_value_page_pv">0</span>
+                </span>
+                
+            </p>
+            
+            
+        </div>
+    </div>
+</div>
+
+<div class="screen-gradient-after">
+    <div class="screen-gradient-content">
+        <div class="screen-gradient-content-inside">
+            <div class="bold-underline-links screen-gradient-sponsor">
+                <p>
+                    <span class="animated fadeIn delay-1s"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="article">
+    <div class='main'>
+        <div class="content markdown animated fadeIn">
+            <h1 id="Maxwell读取MySQL-binlog日志到Kafka"><a href="#Maxwell读取MySQL-binlog日志到Kafka" class="headerlink" title="Maxwell读取MySQL binlog日志到Kafka"></a>Maxwell读取MySQL binlog日志到Kafka</h1><h3 id="启动MySQL"><a href="#启动MySQL" class="headerlink" title="启动MySQL"></a>启动MySQL</h3><h3 id="创建maxwell的数据库和用户"><a href="#创建maxwell的数据库和用户" class="headerlink" title="创建maxwell的数据库和用户"></a>创建maxwell的数据库和用户</h3><h3 id="在MySQL中创建一个测试数据库和表"><a href="#在MySQL中创建一个测试数据库和表" class="headerlink" title="在MySQL中创建一个测试数据库和表"></a>在MySQL中创建一个测试数据库和表</h3><p>前面三个步骤详见 <a href="https://blog.51cto.com/14309075/2415503" target="_blank" rel="noopener">Maxwell读取MySQL binlog日志通过stdout展示</a></p>
+<h3 id="启动Zookeeper"><a href="#启动Zookeeper" class="headerlink" title="启动Zookeeper"></a>启动Zookeeper</h3><pre><code class="shell">[hadoop@hadoop001 ~]$ cd $ZK_HOME/bin
+[hadoop@hadoop001 bin]$ ./zkServer.sh start</code></pre>
+<h3 id="启动kafka，并创建主题为maxwell的topic"><a href="#启动kafka，并创建主题为maxwell的topic" class="headerlink" title="启动kafka，并创建主题为maxwell的topic"></a>启动kafka，并创建主题为maxwell的topic</h3><pre><code class="shell">[hadoop@hadoop001 bin]$ cd $KAFKA_HOME
+//查看kafka版本，防止maxwell不支持
+[hadoop@hadoop001 kafka]$ find ./libs/ -name \*kafka_\* | head -1 | grep -o &#39;\kafka[^\n]*&#39;
+kafka_2.11-0.10.0.1-sources.jar
+//启动kafka-server服务
+[hadoop@hadoop001 kafka]$ nohup bin/kafka-server-start.sh config/server.properties &amp;
+[hadoop@hadoop001 kafka]$ jps
+13460 QuorumPeerMain
+14952 Jps
+13518 Kafka
+[hadoop@hadoop001 kafka]$ bin/kafka-topics.sh --create --zookeeper 192.168.137.2:2181/kafka --replication-factor 1 --partitions 3 --topic maxwell
+Created topic &quot;maxwell&quot;.
+[hadoop@hadoop001 kafka]$ bin/kafka-topics.sh --list --zookeeper 192.168.137.2:2181/kafka
+__consumer_offsets
+maxwell</code></pre>
+<h3 id="启动kafaka的消费者，检查数据是否到位"><a href="#启动kafaka的消费者，检查数据是否到位" class="headerlink" title="启动kafaka的消费者，检查数据是否到位"></a>启动kafaka的消费者，检查数据是否到位</h3><pre><code class="shell">[hadoop@hadoop001 kafka]$ bin/kafka-console-consumer.sh --zookeeper 192.168.137.2:2181/kafka --topic maxwell --from-beginning</code></pre>
+<h3 id="启动maxwell进程"><a href="#启动maxwell进程" class="headerlink" title="启动maxwell进程"></a>启动maxwell进程</h3><pre><code class="shell">//先检查maxwell是否支持kafka-0.10.0.1
+[root@hadoop000 ~]# cd /root/app/maxwell-1.17.1/lib/kafka-clients
+[root@hadoop001 kafka-clients]# ll
+total 5556
+-rw-r--r-- 1 yarn games  746207 Jul  3  2018 kafka-clients-0.10.0.1.jar
+-rw-r--r-- 1 yarn games  951041 Jul  3  2018 kafka-clients-0.10.2.1.jar
+-rw-r--r-- 1 yarn games 1419544 Jul  3  2018 kafka-clients-0.11.0.1.jar
+-rw-r--r-- 1 yarn games  324016 Jul  3  2018 kafka-clients-0.8.2.2.jar
+-rw-r--r-- 1 yarn games  641408 Jul  3  2018 kafka-clients-0.9.0.1.jar
+-rw-r--r-- 1 yarn games 1591338 Jul  3  2018 kafka-clients-1.0.0.jar
+//发现支持kafka-0.10.0.1版本，假如没有生产上正在用的kafka版本的jar包，可以直接把这个版本的client jar包copy进来
+//启动maxwell
+[root@hadoop001 maxwell-1.17.1]# bin/maxwell --user=&#39;maxwell&#39; --password=&#39;maxwell&#39; --host=&#39;127.0.0.1&#39; --producer=kafka --kafka_version=0.10.0.1 --kafka.bootstrap.servers=192.168.137.2:9092 --kafka_topic=maxwell
+Using kafka version: 0.10.0.1
+10:16:52,979 WARN  MaxwellMetrics - Metrics will not be exposed: metricsReportingType not configured.
+10:16:53,451 INFO  ProducerConfig - ProducerConfig values: 
+        metric.reporters = []
+        metadata.max.age.ms = 300000
+        reconnect.backoff.ms = 50
+        sasl.kerberos.ticket.renew.window.factor = 0.8
+        bootstrap.servers = [192.168.137.2:9092]
+        ssl.keystore.type = JKS
+        sasl.mechanism = GSSAPI
+        max.block.ms = 60000
+        interceptor.classes = null
+        ssl.truststore.password = null
+        client.id = 
+        ssl.endpoint.identification.algorithm = null
+        request.timeout.ms = 30000
+        acks = 1
+        receive.buffer.bytes = 32768
+        ssl.truststore.type = JKS
+        retries = 0
+        ssl.truststore.location = null
+        ssl.keystore.password = null
+        send.buffer.bytes = 131072
+        compression.type = none
+        metadata.fetch.timeout.ms = 60000
+        retry.backoff.ms = 100
+        sasl.kerberos.kinit.cmd = /usr/bin/kinit
+        buffer.memory = 33554432
+        timeout.ms = 30000
+        key.serializer = class org.apache.kafka.common.serialization.StringSerializer
+        sasl.kerberos.service.name = null
+        sasl.kerberos.ticket.renew.jitter = 0.05
+        ssl.trustmanager.algorithm = PKIX
+        block.on.buffer.full = false
+        ssl.key.password = null
+        sasl.kerberos.min.time.before.relogin = 60000
+        connections.max.idle.ms = 540000
+        max.in.flight.requests.per.connection = 5
+        metrics.num.samples = 2
+        ssl.protocol = TLS
+        ssl.provider = null
+        ssl.enabled.protocols = [TLSv1.2, TLSv1.1, TLSv1]
+        batch.size = 16384
+        ssl.keystore.location = null
+        ssl.cipher.suites = null
+        security.protocol = PLAINTEXT
+        max.request.size = 1048576
+        value.serializer = class org.apache.kafka.common.serialization.StringSerializer
+        ssl.keymanager.algorithm = SunX509
+        metrics.sample.window.ms = 30000
+        partitioner.class = class org.apache.kafka.clients.producer.internals.DefaultPartitioner
+        linger.ms = 0
+
+10:16:53,512 INFO  ProducerConfig - ProducerConfig values: 
+        metric.reporters = []
+        metadata.max.age.ms = 300000
+        reconnect.backoff.ms = 50
+        sasl.kerberos.ticket.renew.window.factor = 0.8
+        bootstrap.servers = [192.168.137.2:9092]
+        ssl.keystore.type = JKS
+        sasl.mechanism = GSSAPI
+        max.block.ms = 60000
+        interceptor.classes = null
+        ssl.truststore.password = null
+        client.id = producer-1
+        ssl.endpoint.identification.algorithm = null
+        request.timeout.ms = 30000
+        acks = 1
+        receive.buffer.bytes = 32768
+        ssl.truststore.type = JKS
+        retries = 0
+        ssl.truststore.location = null
+        ssl.keystore.password = null
+        send.buffer.bytes = 131072
+        compression.type = none
+        metadata.fetch.timeout.ms = 60000
+        retry.backoff.ms = 100
+        sasl.kerberos.kinit.cmd = /usr/bin/kinit
+        buffer.memory = 33554432
+        timeout.ms = 30000
+        key.serializer = class org.apache.kafka.common.serialization.StringSerializer
+        sasl.kerberos.service.name = null
+        sasl.kerberos.ticket.renew.jitter = 0.05
+        ssl.trustmanager.algorithm = PKIX
+        block.on.buffer.full = false
+        ssl.key.password = null
+        sasl.kerberos.min.time.before.relogin = 60000
+        connections.max.idle.ms = 540000
+        max.in.flight.requests.per.connection = 5
+        metrics.num.samples = 2
+        ssl.protocol = TLS
+        ssl.provider = null
+        ssl.enabled.protocols = [TLSv1.2, TLSv1.1, TLSv1]
+        batch.size = 16384
+        ssl.keystore.location = null
+        ssl.cipher.suites = null
+        security.protocol = PLAINTEXT
+        max.request.size = 1048576
+        value.serializer = class org.apache.kafka.common.serialization.StringSerializer
+        ssl.keymanager.algorithm = SunX509
+        metrics.sample.window.ms = 30000
+        partitioner.class = class org.apache.kafka.clients.producer.internals.DefaultPartitioner
+        linger.ms = 0
+
+10:16:53,516 INFO  AppInfoParser - Kafka version : 0.10.0.1
+10:16:53,516 INFO  AppInfoParser - Kafka commitId : a7a17cdec9eaa6c5
+10:16:53,550 INFO  Maxwell - Maxwell v1.17.1 is booting (MaxwellKafkaProducer), starting at Position[BinlogPosition[mysql-bin.000016:116360], lastHeartbeat=1552092988288]
+10:16:53,730 INFO  MysqlSavedSchema - Restoring schema id 1 (last modified at Position[BinlogPosition[mysql-bin.000014:5999], lastHeartbeat=0])
+10:16:53,846 INFO  BinlogConnectorReplicator - Setting initial binlog pos to: mysql-bin.000016:116360
+10:16:53,951 INFO  BinaryLogClient - Connected to 127.0.0.1:3306 at mysql-bin.000016/116360 (sid:6379, cid:4)
+10:16:53,951 INFO  BinlogConnectorLifecycleListener - Binlog connected.</code></pre>
+<h3 id="在MySQL中更新一条数据"><a href="#在MySQL中更新一条数据" class="headerlink" title="在MySQL中更新一条数据"></a>在MySQL中更新一条数据</h3><pre><code class="sql">mysql&gt; update emp set sal=502 where empno=6001;
+mysql&gt; update emp set sal=603 where empno=6001;
+mysql&gt; create table emp1 select * from emp;</code></pre>
+<h3 id="查看kafka的消费者"><a href="#查看kafka的消费者" class="headerlink" title="查看kafka的消费者"></a>查看kafka的消费者</h3><pre><code class="json">//对应第一条insert语句
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;update&quot;,&quot;ts&quot;:1552097863,&quot;xid&quot;:89,&quot;commit&quot;:true,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:502.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40},&quot;old&quot;:{&quot;sal&quot;:501.00}}
+//对应第二条insert语句
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;update&quot;,&quot;ts&quot;:1552097951,&quot;xid&quot;:123,&quot;commit&quot;:true,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:603.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40},&quot;old&quot;:{&quot;sal&quot;:502.00}}
+//对应建表，相当于在新表emp1里插入了emp表里的所有数据
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:0,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:603.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:1,&quot;data&quot;:{&quot;empno&quot;:7369,&quot;ename&quot;:&quot;SMITH&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7902,&quot;hiredate&quot;:&quot;1980-12-17 00:00:00&quot;,&quot;sal&quot;:800.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:2,&quot;data&quot;:{&quot;empno&quot;:7499,&quot;ename&quot;:&quot;ALLEN&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-02-20 00:00:00&quot;,&quot;sal&quot;:1600.00,&quot;comm&quot;:300.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:3,&quot;data&quot;:{&quot;empno&quot;:7521,&quot;ename&quot;:&quot;WARD&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-02-22 00:00:00&quot;,&quot;sal&quot;:1250.00,&quot;comm&quot;:500.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:4,&quot;data&quot;:{&quot;empno&quot;:7566,&quot;ename&quot;:&quot;JONES&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-04-02 00:00:00&quot;,&quot;sal&quot;:2975.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:5,&quot;data&quot;:{&quot;empno&quot;:7654,&quot;ename&quot;:&quot;MARTIN&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-09-28 00:00:00&quot;,&quot;sal&quot;:1250.00,&quot;comm&quot;:1400.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:6,&quot;data&quot;:{&quot;empno&quot;:7698,&quot;ename&quot;:&quot;BLAKE&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-05-01 00:00:00&quot;,&quot;sal&quot;:2850.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:7,&quot;data&quot;:{&quot;empno&quot;:7782,&quot;ename&quot;:&quot;CLARK&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-06-09 00:00:00&quot;,&quot;sal&quot;:2450.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:8,&quot;data&quot;:{&quot;empno&quot;:7788,&quot;ename&quot;:&quot;SCOTT&quot;,&quot;job&quot;:&quot;ANALYST&quot;,&quot;mgr&quot;:7566,&quot;hiredate&quot;:&quot;1987-04-19 00:00:00&quot;,&quot;sal&quot;:3000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:9,&quot;data&quot;:{&quot;empno&quot;:7839,&quot;ename&quot;:&quot;KING&quot;,&quot;job&quot;:&quot;PRESIDENT&quot;,&quot;mgr&quot;:0,&quot;hiredate&quot;:&quot;1981-11-17 00:00:00&quot;,&quot;sal&quot;:5000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:10,&quot;data&quot;:{&quot;empno&quot;:7844,&quot;ename&quot;:&quot;TURNER&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-09-08 00:00:00&quot;,&quot;sal&quot;:1500.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:11,&quot;data&quot;:{&quot;empno&quot;:7876,&quot;ename&quot;:&quot;ADAMS&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7788,&quot;hiredate&quot;:&quot;1987-05-23 00:00:00&quot;,&quot;sal&quot;:1100.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:12,&quot;data&quot;:{&quot;empno&quot;:7900,&quot;ename&quot;:&quot;JAMES&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-12-03 00:00:00&quot;,&quot;sal&quot;:950.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:13,&quot;data&quot;:{&quot;empno&quot;:7902,&quot;ename&quot;:&quot;FORD&quot;,&quot;job&quot;:&quot;ANALYST&quot;,&quot;mgr&quot;:7566,&quot;hiredate&quot;:&quot;1981-12-03 00:00:00&quot;,&quot;sal&quot;:3000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;xoffset&quot;:14,&quot;data&quot;:{&quot;empno&quot;:7934,&quot;ename&quot;:&quot;MILLER&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7782,&quot;hiredate&quot;:&quot;1982-01-23 00:00:00&quot;,&quot;sal&quot;:1300.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552098958,&quot;xid&quot;:435,&quot;commit&quot;:true,&quot;data&quot;:{&quot;empno&quot;:8888,&quot;ename&quot;:&quot;HIVE&quot;,&quot;job&quot;:&quot;PROGRAM&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1988-01-23 00:00:00&quot;,&quot;sal&quot;:10300.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:null}}
+# 数据已经正常同步到kafka中</code></pre>
+<h3 id="Maxwell的过滤功能"><a href="#Maxwell的过滤功能" class="headerlink" title="Maxwell的过滤功能"></a>Maxwell的过滤功能</h3><p>参考过滤配置： &lt;<a href="http://maxwells-daemon.io/filtering/%3E" target="_blank" rel="noopener">http://maxwells-daemon.io/filtering/%3E</a>;</p>
+<pre><code class="shell">[root@hadoop001 maxwell-1.17.1]# bin/maxwell --user=&#39;maxwell&#39; --password=&#39;maxwell&#39; \
+--host=&#39;127.0.0.1&#39; --filter &#39;exclude: *.*, include:hlwtest.emp1&#39; \
+--producer=kafka --kafka_version=0.10.0.1 --kafka.bootstrap.servers=192.168.137.2:9092 --kafka_topic=maxwell
+--filter &#39;exclude: *.*, include:hlwtest.emp1&#39;的意思是只监控hlwtest.emp1表的变化，其他的都不监控
+//MySQL中update数据
+mysql&gt; update emp set sal=730 where empno=6001;
+mysql&gt; update emp1 set sal=330 where empno=6001;
+mysql&gt; update emp set sal=730 where empno=6001;
+mysql&gt; update emp1 set sal=331 where empno=6001;
+
+//Kafka消费者接收到的数据
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;update&quot;,&quot;ts&quot;:1552099858,&quot;xid&quot;:916,&quot;commit&quot;:true,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:330.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40},&quot;old&quot;:{&quot;sal&quot;:321.00}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp1&quot;,&quot;type&quot;:&quot;update&quot;,&quot;ts&quot;:1552099858,&quot;xid&quot;:922,&quot;commit&quot;:true,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:331.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40},&quot;old&quot;:{&quot;sal&quot;:330.00}}
+确实只消费到了emp1表的update语句，而没有接收到emp表的更新</code></pre>
+<h3 id="Maxwell-的bootstrap"><a href="#Maxwell-的bootstrap" class="headerlink" title="Maxwell 的bootstrap"></a>Maxwell 的bootstrap</h3><pre><code class="sql">mysql&gt; insert into maxwell.bootstrap (database_name, table_name) values (&quot;hlwtest&quot;, &quot;emp&quot;);
+mysql&gt; select * from maxwell.bootstrap;
++----+---------------+------------+--------------+-------------+---------------+------------+------------+---------------------+---------------------+------------------+-----------------+-----------+
+| id | database_name | table_name | where_clause | is_complete | inserted_rows | total_rows | created_at | started_at          | completed_at        | binlog_file      | binlog_position | client_id |
++----+---------------+------------+--------------+-------------+---------------+------------+------------+---------------------+---------------------+------------------+-----------------+-----------+
+|  1 | hlwtest       | emp        | NULL         |           1 |            16 |          0 | NULL       | 2019-03-09 11:33:11 | 2019-03-09 11:33:11 | mysql-bin.000018 |          225498 | maxwell   |
++----+---------------+------------+--------------+-------------+---------------+------------+------------+---------------------+---------------------+------------------+-----------------+-----------+</code></pre>
+<h3 id="kafka的消费窗口"><a href="#kafka的消费窗口" class="headerlink" title="kafka的消费窗口"></a>kafka的消费窗口</h3><pre><code class="json">{&quot;database&quot;:&quot;maxwell&quot;,&quot;table&quot;:&quot;bootstrap&quot;,&quot;type&quot;:&quot;insert&quot;,&quot;ts&quot;:1552102248,&quot;xid&quot;:1555,&quot;commit&quot;:true,&quot;data&quot;:{&quot;id&quot;:1,&quot;database_name&quot;:&quot;hlwtest&quot;,&quot;table_name&quot;:&quot;emp&quot;,&quot;where_clause&quot;:null,&quot;is_complete&quot;:0,&quot;inserted_rows&quot;:0,&quot;total_rows&quot;:0,&quot;created_at&quot;:null,&quot;started_at&quot;:null,&quot;completed_at&quot;:null,&quot;binlog_file&quot;:null,&quot;binlog_position&quot;:0,&quot;client_id&quot;:&quot;maxwell&quot;}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-start&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:6001,&quot;ename&quot;:&quot;SIWA&quot;,&quot;job&quot;:&quot;DESIGNER&quot;,&quot;mgr&quot;:7001,&quot;hiredate&quot;:&quot;2019-03-08 00:00:00&quot;,&quot;sal&quot;:730.00,&quot;comm&quot;:6000.00,&quot;deptno&quot;:40}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7369,&quot;ename&quot;:&quot;SMITH&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7902,&quot;hiredate&quot;:&quot;1980-12-17 00:00:00&quot;,&quot;sal&quot;:800.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7499,&quot;ename&quot;:&quot;ALLEN&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-02-20 00:00:00&quot;,&quot;sal&quot;:1600.00,&quot;comm&quot;:300.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7521,&quot;ename&quot;:&quot;WARD&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-02-22 00:00:00&quot;,&quot;sal&quot;:1250.00,&quot;comm&quot;:500.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7566,&quot;ename&quot;:&quot;JONES&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-04-02 00:00:00&quot;,&quot;sal&quot;:2975.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7654,&quot;ename&quot;:&quot;MARTIN&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-09-28 00:00:00&quot;,&quot;sal&quot;:1250.00,&quot;comm&quot;:1400.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7698,&quot;ename&quot;:&quot;BLAKE&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-05-01 00:00:00&quot;,&quot;sal&quot;:2850.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7782,&quot;ename&quot;:&quot;CLARK&quot;,&quot;job&quot;:&quot;MANAGER&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1981-06-09 00:00:00&quot;,&quot;sal&quot;:2450.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7788,&quot;ename&quot;:&quot;SCOTT&quot;,&quot;job&quot;:&quot;ANALYST&quot;,&quot;mgr&quot;:7566,&quot;hiredate&quot;:&quot;1987-04-19 00:00:00&quot;,&quot;sal&quot;:3000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7839,&quot;ename&quot;:&quot;KING&quot;,&quot;job&quot;:&quot;PRESIDENT&quot;,&quot;mgr&quot;:0,&quot;hiredate&quot;:&quot;1981-11-17 00:00:00&quot;,&quot;sal&quot;:5000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7844,&quot;ename&quot;:&quot;TURNER&quot;,&quot;job&quot;:&quot;SALESMAN&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-09-08 00:00:00&quot;,&quot;sal&quot;:1500.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7876,&quot;ename&quot;:&quot;ADAMS&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7788,&quot;hiredate&quot;:&quot;1987-05-23 00:00:00&quot;,&quot;sal&quot;:1100.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7900,&quot;ename&quot;:&quot;JAMES&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7698,&quot;hiredate&quot;:&quot;1981-12-03 00:00:00&quot;,&quot;sal&quot;:950.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:30}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7902,&quot;ename&quot;:&quot;FORD&quot;,&quot;job&quot;:&quot;ANALYST&quot;,&quot;mgr&quot;:7566,&quot;hiredate&quot;:&quot;1981-12-03 00:00:00&quot;,&quot;sal&quot;:3000.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:20}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:7934,&quot;ename&quot;:&quot;MILLER&quot;,&quot;job&quot;:&quot;CLERK&quot;,&quot;mgr&quot;:7782,&quot;hiredate&quot;:&quot;1982-01-23 00:00:00&quot;,&quot;sal&quot;:1300.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:10}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-insert&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{&quot;empno&quot;:8888,&quot;ename&quot;:&quot;HIVE&quot;,&quot;job&quot;:&quot;PROGRAM&quot;,&quot;mgr&quot;:7839,&quot;hiredate&quot;:&quot;1988-01-23 00:00:00&quot;,&quot;sal&quot;:10300.00,&quot;comm&quot;:0.00,&quot;deptno&quot;:null}}
+{&quot;database&quot;:&quot;maxwell&quot;,&quot;table&quot;:&quot;bootstrap&quot;,&quot;type&quot;:&quot;update&quot;,&quot;ts&quot;:1552102391,&quot;xid&quot;:1617,&quot;commit&quot;:true,&quot;data&quot;:{&quot;id&quot;:1,&quot;database_name&quot;:&quot;hlwtest&quot;,&quot;table_name&quot;:&quot;emp&quot;,&quot;where_clause&quot;:null,&quot;is_complete&quot;:1,&quot;inserted_rows&quot;:16,&quot;total_rows&quot;:0,&quot;created_at&quot;:null,&quot;started_at&quot;:&quot;2019-03-09 11:33:11&quot;,&quot;completed_at&quot;:&quot;2019-03-09 11:33:11&quot;,&quot;binlog_file&quot;:&quot;mysql-bin.000018&quot;,&quot;binlog_position&quot;:225498,&quot;client_id&quot;:&quot;maxwell&quot;},&quot;old&quot;:{&quot;is_complete&quot;:0,&quot;inserted_rows&quot;:1,&quot;completed_at&quot;:null}}
+{&quot;database&quot;:&quot;hlwtest&quot;,&quot;table&quot;:&quot;emp&quot;,&quot;type&quot;:&quot;bootstrap-complete&quot;,&quot;ts&quot;:1552102391,&quot;data&quot;:{}}</code></pre>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls"
+                data-autoplay="false">
+                <source type="audio/mpeg" src="">
+            </audio>
+            
+            <ul id="audio-list" style="display:none">
+                
+                
+                <li title='0' data-url='/statics/chengdu.mp3'></li>
+                
+                    
+            </ul>
+            
+            
+            
+    <div id='gitalk-container' class="comment link"
+        data-ae='true'
+        data-ci='ec894e2b66f752e8b7fb'
+        data-cs='3ccc2e92bb350688fe2c2dc2930189b62622bfb1'
+        data-r='blog-comments'
+        data-o='TriDiamond'
+        data-a='TriDiamond'
+        data-d=''
+    >留言</div>
+
+
+            
+            
+        </div>
+        <div class="sidebar">
+            <div class="box animated fadeInRight">
+                <div class="subbox">
+                    <img src="https://res.cloudinary.com/tridiamond/image/upload/v1573019751/TriDiamond_logo_ui_xeublz.jpg" height=300 width=300></img>
+                    <p>阳春</p>
+                    <span>Think like an artist, develop like an artisan</span>
+                    <dl>
+                        <dd><a href="https://github.com/TriDiamond" target="_blank"><span
+                                    class=" iconfont icon-github"></span></a></dd>
+                        <dd><a href="https://twitter.com/TriDiamond6" target="_blank"><span
+                                    class=" iconfont icon-twitter"></span></a></dd>
+                        <dd><a href="https://stackoverflow.com/users/7602324/tridiamond?tab=profile" target="_blank"><span
+                                    class=" iconfont icon-stack-overflow"></span></a></dd>
+                    </dl>
+                </div>
+                <ul>
+                    <li><a href="/">3 <p>文章</p></a></li>
+                    <li><a href="/categories">1 <p>分类</p></a></li>
+                    <li><a href="/tags">2 <p>标签</p></a></li>
+                </ul>
+            </div>
+            
+            
+            
+            <div class="box sticky animated fadeInRight faster">
+                <div id="toc" class="subbox">
+                    <h4>目录</h4>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Maxwell读取MySQL-binlog日志到Kafka"><span class="toc-number">1.</span> <span class="toc-text">Maxwell读取MySQL binlog日志到Kafka</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#启动MySQL"><span class="toc-number">1.0.1.</span> <span class="toc-text">启动MySQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建maxwell的数据库和用户"><span class="toc-number">1.0.2.</span> <span class="toc-text">创建maxwell的数据库和用户</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在MySQL中创建一个测试数据库和表"><span class="toc-number">1.0.3.</span> <span class="toc-text">在MySQL中创建一个测试数据库和表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动Zookeeper"><span class="toc-number">1.0.4.</span> <span class="toc-text">启动Zookeeper</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动kafka，并创建主题为maxwell的topic"><span class="toc-number">1.0.5.</span> <span class="toc-text">启动kafka，并创建主题为maxwell的topic</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动kafaka的消费者，检查数据是否到位"><span class="toc-number">1.0.6.</span> <span class="toc-text">启动kafaka的消费者，检查数据是否到位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动maxwell进程"><span class="toc-number">1.0.7.</span> <span class="toc-text">启动maxwell进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#在MySQL中更新一条数据"><span class="toc-number">1.0.8.</span> <span class="toc-text">在MySQL中更新一条数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#查看kafka的消费者"><span class="toc-number">1.0.9.</span> <span class="toc-text">查看kafka的消费者</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Maxwell的过滤功能"><span class="toc-number">1.0.10.</span> <span class="toc-text">Maxwell的过滤功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Maxwell-的bootstrap"><span class="toc-number">1.0.11.</span> <span class="toc-text">Maxwell 的bootstrap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#kafka的消费窗口"><span class="toc-number">1.0.12.</span> <span class="toc-text">kafka的消费窗口</span></a></li></ol></li></ol></li></ol>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</div>
+
+    </div>
+</div>
+    <div id="back-to-top" class="animated fadeIn faster">
+        <div class="flow"></div>
+        <span class="percentage animated fadeIn faster">0%</span>
+        <span class="iconfont icon-top02 animated fadeIn faster"></span>
+    </div>
+</body>
+<footer>
+    <p class="copyright" id="copyright">
+        &copy; 2019
+        <span class="gradient-text">
+            阳春
+        </span>.
+        Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a>
+        Theme
+        <span class="gradient-text">
+            <a href="https://github.com/TriDiamond/hexo-theme-obsidian" title="Obsidian" target="_blank" rel="noopener">Obsidian</a>
+        </span>
+        <small><a href="https://github.com/TriDiamond/hexo-theme-obsidian/blob/master/CHANGELOG.md" title="v1.4.3" target="_blank" rel="noopener">v1.4.3</a></small>
+    </p>
+</footer>
+
+<script type="text/javascript" src="https://cdn.bootcss.com/mathjax/2.7.6/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<script>
+  MathJax.Hub.Config({
+    "HTML-CSS": {
+      preferredFont: "TeX",
+      availableFonts: ["STIX", "TeX"],
+      linebreaks: {
+        automatic: true
+      },
+      EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+      inlineMath: [
+        ["$", "$"],
+        ["\\(", "\\)"]
+      ],
+      processEscapes: true,
+      ignoreClass: "tex2jax_ignore|dno",
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      noUndefined: {
+        attributes: {
+          mathcolor: "red",
+          mathbackground: "#FFEEEE",
+          mathsize: "90%"
+        }
+      },
+      Macros: {
+        href: "{}"
+      }
+    },
+    messageStyle: "none"
+  });
+</script>
+<script>
+  function initialMathJax() {
+    MathJax.Hub.Queue(function () {
+      var all = MathJax.Hub.getAllJax(),
+        i;
+      // console.log(all);
+      for (i = 0; i < all.length; i += 1) {
+        console.log(all[i].SourceElement().parentNode)
+        all[i].SourceElement().parentNode.className += ' has-jax';
+      }
+    });
+  }
+
+  function reprocessMathJax() {
+    if (typeof MathJax !== 'undefined') {
+      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    }
+  }
+</script>
+
+
+
+    <link rel="stylesheet" href="//cdn.bootcss.com/gitalk/1.5.0/gitalk.min.css">
+    <script src="//cdn.bootcss.com/gitalk/1.5.0/gitalk.min.js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/obsidian.js"></script>
+<script src="/js/jquery.truncate.js"></script>
+<script src="/js/search.js"></script>
+<script src="//cdn.bootcss.com/typed.js/2.0.10/typed.min.js"></script>
+<script src="//cdn.bootcss.com/blueimp-md5/2.12.0/js/md5.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/social-share.js/1.0.16/js/social-share.min.js"></script>
+
+<script src="https://cdn.bootcss.com/codemirror/5.48.4/codemirror.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/javascript/javascript.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/css/css.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/xml/xml.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/clike/clike.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/php/php.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/shell/shell.min.js"></script>
+
+    <script src="//cdn.bootcss.com/codemirror/5.48.4/mode/python/python.min.js"></script>
+
+
+
+    <script src="/js/busuanzi.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            if ($('span[id^="busuanzi_"]').length) {
+                initialBusuanzi();
+            }
+        });
+    </script>
+
+
+<link rel="stylesheet" href="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="//cdn.bootcss.com/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdn.bootcss.com/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="//www.googletagmanager.com/gtag/js?id=UA-149874671-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-149874671-1');
+    </script>
+
+
+
+
+
+<script>
+    function initialTyped () {
+        var typedTextEl = $('.typed-text');
+        if (typedTextEl && typedTextEl.length > 0) {
+            var typed = new Typed('.typed-text', {
+                strings: ["Think like an artist, develop like an artisan", "艺术家思维去思考问题，工匠创造精神去开发"],
+                typeSpeed: 90,
+                loop: true,
+                loopCount: Infinity,
+                backSpeed: 20,
+            });
+        }
+    }
+
+    if ($('.article-header') && $('.article-header').length) {
+        $(document).ready(function () {
+            initialTyped();
+        });
+    }
+</script>
+
+
+
+
+</html>

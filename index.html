@@ -128,19 +128,19 @@
             十一月 23, 2019
         </p>
         <h3 class="post-title animated fadeInDown">
-            <a href="/2019/11/23/hello-world/" title="Hello World" class="posttitle">Hello World</a></h3>
+            <a href="/2019/11/23/Maxwell%E8%AF%BB%E5%8F%96MySQL%20binlog%E6%97%A5%E5%BF%97%E5%88%B0Kafka/" title="Maxwell读取MySQL binlog日志到Kafka" class="posttitle">Maxwell读取MySQL binlog日志到Kafka</a></h3>
         
         <p class="post-count animated fadeInDown">
             
             <span>
                 <b class="iconfont icon-text2"></b> <i>文章字数</i>
-                1.8k
+                28k
             </span>
             
             
             <span>
                 <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
-                2 mins.
+                26 mins.
             </span>
             
             
@@ -149,9 +149,10 @@
         
         <div class="md-content animated fadeIn">
             
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems...</p>
+            <h3 id="启动MySQL"><a href="#启动MySQL" class="headerlink" title="启动MySQL"></a>启动MySQL</h3><h3 id="创建maxwell的数据库和用户"><a href="#创建maxwell的数据库和用户" class="headerlink" title="创建maxwell的数据库和用户"></a>创建maxwell的数据库和用户</h3><h3 id="在MySQL中创建一个测试数据库和表"><a href="#在MySQL中创建一个测试数据库和表" class="headerlink" title="在MySQL中创建一个测试数据库和表"></a>在MySQL中创建一个测试数据库和表</h3><p>前面三个步骤详见 <a href="https://blog.51cto.com/14309075/2415503" target="_blank" rel="noopener">Maxwell读取MySQL binlog日志通过stdout展示</a></p>
+<h3 id="启动Zookeeper"><a href="#启动Zookeeper" class="headerlink" title="启动Zookeeper"></a>启动Zookeeper</h3><pre><code class="shell">[hadoop...</code></pre>
             
-            <span class="read-more"><a href="/2019/11/23/hello-world/" title="查看全文" class="posttitle">查看全文</a>
+            <span class="read-more"><a href="/2019/11/23/Maxwell%E8%AF%BB%E5%8F%96MySQL%20binlog%E6%97%A5%E5%BF%97%E5%88%B0Kafka/" title="查看全文" class="posttitle">查看全文</a>
                 <b class="iconfont icon-arrow-right- gradient-text"></b></span>
         </div>
     </div>
@@ -172,6 +173,106 @@
 
     <div id="primary">
         
+<div class="post" id="post">
+    <div class="post-cover animated fadeIn" style="
+            background-image:
+            radial-gradient(ellipse closest-side, rgba(0, 0, 0, 0.65), #100e17),
+            url(/img/welcome-cover.jpg);">
+    </div>
+    <div class="else">
+        <p class="animated fadeInDown">
+            
+                <a href="/categories/大数据">
+                  <b>「 </b>大数据<b> 」</b>
+                </a>
+            
+            十一月 23, 2019
+        </p>
+        <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="生产SparkStreaming数据零丢失最佳实践(含代码)" class="posttitle">生产SparkStreaming数据零丢失最佳实践(含代码)</a></h3>
+        
+            <p class="post-count animated fadeInDown">
+                
+                    <span>
+                        <b class="iconfont icon-text2"></b> <i>文章字数</i>
+                        10k
+                    </span>
+                
+                
+                    <span>
+                        <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
+                        10 mins.
+                    </span>
+                
+                
+            </p>
+            
+                <ul class="animated fadeInDown post-tags-list" itemprop="keywords"><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark/" rel="tag">Spark</a></li><li class="animated fadeInDown post-tags-list-item"><a class="animated fadeInDown post-tags-list-link" href="/tags/Spark-Streaming/" rel="tag">Spark Streaming</a></li></ul>
+            
+        
+        <div class="md-content animated fadeIn">
+            
+                <pre><code class="sql">mysql&gt; use test
+mysql&gt; create table hlw_offset(
+        topic varchar(32),
+        groupid varchar(50),
+        partitions int,
+        fromoffset bigint,
+        untiloffset bigint,
+        primary key(topic,groupid,partitions)
+        );</code></pre>
+<pre><code class="xml">&lt;scala.version&gt;2.11.8&lt;/scala.version&gt;
+&lt;spark....</code></pre>
+            
+            <span class="read-more"><a href="/2019/11/23/%E7%94%9F%E4%BA%A7SparkStreaming%E6%95%B0%E6%8D%AE%E9%9B%B6%E4%B8%A2%E5%A4%B1%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5(%E5%90%AB%E4%BB%A3%E7%A0%81)/" title="查看全文" class="posttitle">查看全文</a> <b class="iconfont icon-arrow-right- gradient-text"></b></span>
+        </div>
+    </div>
+</div>
+
+
+<div class="post" id="post">
+    <div class="post-cover animated fadeIn" style="
+            background-image:
+            radial-gradient(ellipse closest-side, rgba(0, 0, 0, 0.65), #100e17),
+            url(/img/welcome-cover.jpg);">
+    </div>
+    <div class="else">
+        <p class="animated fadeInDown">
+            
+                <a href="javascript:;" target="_blank" rel="noopener"><b>「 </b>文章<b> 」</b></a>
+            
+            十一月 23, 2019
+        </p>
+        <h3 class="post-title animated fadeInDown"><a href="/2019/11/23/hello-world/" title="Hello World" class="posttitle">Hello World</a></h3>
+        
+            <p class="post-count animated fadeInDown">
+                
+                    <span>
+                        <b class="iconfont icon-text2"></b> <i>文章字数</i>
+                        1.8k
+                    </span>
+                
+                
+                    <span>
+                        <b class="iconfont icon-timer__s"></b> <i>阅读约需</i>
+                        2 mins.
+                    </span>
+                
+                
+            </p>
+            
+        
+        <div class="md-content animated fadeIn">
+            
+                <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+<h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre><code class="bash">$ hexo new &quot;My New Post&quot;</code></pre>
+<p>More...</p>
+            
+            <span class="read-more"><a href="/2019/11/23/hello-world/" title="查看全文" class="posttitle">查看全文</a> <b class="iconfont icon-arrow-right- gradient-text"></b></span>
+        </div>
+    </div>
+</div>
+
+
     </div>
     
 </div>
